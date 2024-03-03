@@ -2,7 +2,7 @@ import sys
 sys.path.append("./live_tools")
 import ccxt
 import ta
-from utilities.perp_bitget import PerpBitget
+from perp_bitget import PerpBitget
 import pandas as pd
 import json
 
