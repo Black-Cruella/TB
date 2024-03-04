@@ -82,6 +82,10 @@ for i, row in ha_df.iterrows():
         position = {'type': 'buy', 'size': order_size}
         print(f"Opened a long position with size: {order_size}")
 
+        stop_loss_price = position['entry_price'] * 0.995  # 0.5% sous le prix d'achat
+        bitget.place_limit_stop_loss('AVAX/USDT', 'sell', order_size, stop_loss_price, stop_loss_price, reduce=True)
+        print(f"Stop loss placed for long position at {stop_loss_price}")
+
     # Check for a sell signal and if currently in a long position
     elif row['sell_signal'] and position is not None and position['type'] == 'buy':
         print(f"Sell signal at index {i}")
@@ -96,6 +100,10 @@ for i, row in ha_df.iterrows():
         bitget.place_market_order('AVAX/USDT', 'sell', order_size)
         position = {'type': 'sell', 'size': order_size}
         print(f"Opened a short position with size: {order_size}")
+
+        stop_loss_price = position['entry_price'] * 1.005  # 0.5% au-dessus du prix de vente
+        bitget.place_limit_stop_loss('AVAX/USDT', 'buy', order_size, stop_loss_price, stop_loss_price, reduce=True)
+        print(f"Stop loss placed for short position at {stop_loss_price}")
 
     # Check for a buy signal and if currently in a short position
     elif row['buy_signal'] and position is not None and position['type'] == 'sell':
