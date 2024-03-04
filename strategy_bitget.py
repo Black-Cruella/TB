@@ -63,6 +63,28 @@ ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TRE
 ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
 
 
+balance = float(bitget.get_usdt_equity())
+balance = balance * leverage
+print(f"Balance: {round(balance, 2)} $", )
+
+position = None
+
+for i, row in ha_df.iterrows():
+    # Check for a buy signal and if not already in a position
+    if row['buy_signal'] and position is None:
+        print(f"Buy signal at index {i}")
+        order_size = balance 
+        bitget.create_market_buy_order('AVAX/USDT', order_size)
+        position = {'type': 'buy', 'size': order_size}
+        print(f"Opened a long position with size: {order_size}")
+
+    # Check for a sell signal and if currently in a long position
+    elif row['sell_signal'] and position is not None and position['type'] == 'buy':
+        print(f"Sell signal at index {i}")
+        bitget.create_market_sell_order('AVAX/USDT', position['size'])
+        position = None
+        print("Closed the long position")
+
 
 # Afficher le DataFrame des bougies Heikin Ashi
 print(ha_df)
