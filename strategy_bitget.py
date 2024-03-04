@@ -64,6 +64,36 @@ ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TRE
 # Calculate sell signals
 ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
 
+def open_long(row):
+    if (
+        row['buy_signal']
+    ):
+        return True
+    else:
+        return False
+
+def close_long(row):
+    if (row['sell_signal']):
+        return True
+    else:
+        return False
+
+def open_short(row):
+    if (
+        row['sell_signal']      
+    ):
+        return True
+    else:
+        return False
+
+def close_short(row):
+    if (row['buy_signal']):
+        
+        return True
+    else:
+        return False
+
+
 usd_balance = float(bitget.get_usdt_equity())
 usd_balance = usd_balance * leverage
 print(f"Balance: {round(usd_balance, 2)} $", )
@@ -82,50 +112,56 @@ row = df.iloc[-2]
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
-    if position["side"] == "long" and row['sell_signal']:
+    if position["side"] == "long" and close_long(row):
         close_long_market_price = float(df.iloc[-1]["close"])
-        close_long_quantity = float(bitget.convert_amount_to_precision(pair, position["size"]))
+        close_long_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
         exchange_close_long_quantity = close_long_quantity * close_long_market_price
         print(
-            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$")
-        if True:  # Set to True to place orders (e.g., production)
+            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
+        )
+        if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
 
-    elif position["side"] == "short" and row['buy_signal']:
+    elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
-        close_short_quantity = float(bitget.convert_amount_to_precision(pair, position["size"]))
+        close_short_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
         exchange_close_short_quantity = close_short_quantity * close_short_market_price
         print(
-            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$")
-        if True:  # Set to True to place orders (e.g., production)
+            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
+        )
+        if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
 
 else:
     print("No active position")
-    if row['buy_signal']:
+    if open_long(row) and "long" in type:
         long_market_price = float(df.iloc[-1]["close"])
         long_quantity_in_usd = usd_balance * leverage
-        long_quantity = float(
-            bitget.convert_amount_to_precision(pair, float(
-                bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
-            )))
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
+        )))
         exchange_long_quantity = long_quantity * long_market_price
         print(
-            f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$")
-        if True:  # Set to True to place orders (e.g., production)
+            f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$"
+        )
+        if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
 
-    elif row['sell_signal']:
+    elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
         short_quantity_in_usd = usd_balance * leverage
-        short_quantity = float(
-            bitget.convert_amount_to_precision(pair, float(
-                bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
-            )))
+        short_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
+        )))
         exchange_short_quantity = short_quantity * short_market_price
         print(
-            f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$")
-        if True:  # Set to True to place orders (e.g., production)
+            f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$"
+        )
+        if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
 
 now = datetime.now()
