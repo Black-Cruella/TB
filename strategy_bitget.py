@@ -56,6 +56,13 @@ superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=
 ha_df['SUPER_TREND2'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 ha_df['SUPER_TREND_DIRECTION2'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
+# Calculate buy signals
+ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TREND_DIRECTION2'] == 1)
+
+# Calculate sell signals
+ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
+
+
 
 # Afficher le DataFrame des bougies Heikin Ashi
 print(ha_df)
