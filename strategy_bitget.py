@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./live_tools")
+sys.path.append("./TB")
 import ccxt
 import ta
 from perp_bitget import PerpBitget
