@@ -72,7 +72,7 @@ print(ha_df)
 position = None
 
 for i, row in ha_df.iterrows():
-    row = df.iloc[-2]  # Récupération des données de l'avant-dernière bougie
+    row = ha_df.iloc[-2]  # Récupération des données de l'avant-dernière bougie
     # Check for a buy signal and if not already in a position
     if row['buy_signal'] and position is None:
         print(f"Buy signal at index {i}")
