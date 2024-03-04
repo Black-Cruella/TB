@@ -1,5 +1,7 @@
 import sys
 sys.path.append("./TB")
+import ccxt
+import ta
 from perp_bitget import PerpBitget
 import pandas_ta as pda 
 import pandas as pd
@@ -8,14 +10,17 @@ import json
 account_to_select = "bitget_exemple"
 production = True
 
-pair = "AVAX/USDT"
+pair = "AVAX/USDT:USDT"
 leverage = 1
+type=["long", "short"]
+src="close"
 
 f = open(
     "./TB/secret.json",
 )
 secret = json.load(f)
 f.close()
+
 
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
@@ -57,6 +62,7 @@ ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TRE
 # Calculate sell signals
 ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
 
+
 balance = float(bitget.get_usdt_equity())
 balance = balance * leverage
 print(f"Balance: {round(balance, 2)} $", )
@@ -65,13 +71,15 @@ pd.set_option('display.max_rows', None)
 print(ha_df)
 
 # Récupération des positions ouvertes
-positions_data = bitget.get_open_position(pair)
+positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["volume"]), "entry_price": d["entry_price"]}
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "entry_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
 # Boucle principale pour exécuter la stratégie de trading
 for i, row in ha_df.iterrows():
+    row = ha_df.iloc[-2]  # Récupération des données de l'avant-dernière bougie
+
     # Si une position est ouverte, vérifier les conditions de clôture
     if position:
         position = position[0]  # Sélection de la première position
@@ -79,13 +87,13 @@ for i, row in ha_df.iterrows():
         # Si la position est longue et les conditions de clôture longue sont remplies
         if position["side"] == "long" and row['sell_signal']:
             print(f"Sell signal at index {i}, closing the long position")
-            bitget.place_market_order(pair, 'sell', position['size'])
+            bitget.place_market_order('AVAX/USDT', 'sell', position['size'])
             position = None
 
         # Si la position est courte et les conditions de clôture courte sont remplies
         elif position["side"] == "short" and row['buy_signal']:
             print(f"Buy signal at index {i}, closing the short position")
-            bitget.place_market_order(pair, 'buy', position['size'])
+            bitget.place_market_order('AVAX/USDT', 'buy', position['size'])
             position = None
 
     # Si aucune position n'est ouverte, vérifier les conditions d'ouverture
@@ -94,26 +102,26 @@ for i, row in ha_df.iterrows():
         if row['buy_signal']:
             print(f"Buy signal at index {i}, opening a long position")
             order_size = balance 
-            bitget.place_market_order(pair, 'buy', order_size)
+            bitget.place_market_order('AVAX/USDT', 'buy', order_size)
             position = {'type': 'long', 'size': order_size}
             print(f"Opened a long position with size: {order_size}")
 
             # Placement du stop-loss pour la position longue
             stop_loss_price = row['close'] * 0.995  # 0.5% sous le prix d'achat
-            bitget.place_limit_stop_loss(pair, 'sell', order_size, stop_loss_price, stop_loss_price, reduce=True)
+            bitget.place_limit_stop_loss('AVAX/USDT', 'sell', order_size, stop_loss_price, stop_loss_price, reduce=True)
             print(f"Stop loss placed for long position at {stop_loss_price}")
 
         # Si les conditions d'ouverture courte sont remplies
         elif row['sell_signal']:
             print(f"Sell signal at index {i}, opening a short position")
             order_size = balance 
-            bitget.place_market_order(pair, 'sell', order_size)
+            bitget.place_market_order('AVAX/USDT', 'sell', order_size)
             position = {'type': 'short', 'size': order_size}
             print(f"Opened a short position with size: {order_size}")
 
             # Placement du stop-loss pour la position courte
             stop_loss_price = row['close'] * 1.005  # 0.5% au-dessus du prix de vente
-            bitget.place_limit_stop_loss(pair, 'buy', order_size, stop_loss_price, stop_loss_price, reduce=True)
+            bitget.place_limit_stop_loss('AVAX/USDT', 'buy', order_size, stop_loss_price, stop_loss_price, reduce=True)
             print(f"Stop loss placed for short position at {stop_loss_price}")
 
 # Vérification des positions restantes
