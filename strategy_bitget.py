@@ -67,6 +67,7 @@ balance = float(bitget.get_usdt_equity())
 balance = balance * leverage
 print(f"Balance: {round(balance, 2)} $", )
 
+pd.set_option('display.max_rows', None)
 print(ha_df)
 
 position = None
