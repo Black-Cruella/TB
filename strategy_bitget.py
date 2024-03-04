@@ -67,6 +67,8 @@ balance = float(bitget.get_usdt_equity())
 balance = balance * leverage
 print(f"Balance: {round(balance, 2)} $", )
 
+print(ha_df)
+
 position = None
 
 for i, row in ha_df.iterrows():
@@ -103,4 +105,4 @@ for i, row in ha_df.iterrows():
 
 
 # Afficher le DataFrame des bougies Heikin Ashi
-print(ha_df)
+
