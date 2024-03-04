@@ -70,20 +70,36 @@ print(f"Balance: {round(balance, 2)} $", )
 position = None
 
 for i, row in ha_df.iterrows():
+    row = df.iloc[-2]  # Récupération des données de l'avant-dernière bougie
     # Check for a buy signal and if not already in a position
     if row['buy_signal'] and position is None:
         print(f"Buy signal at index {i}")
         order_size = balance 
-        bitget.create_market_buy_order('AVAX/USDT', order_size)
+        bitget.place_market_order('AVAX/USDT', 'buy', order_size)
         position = {'type': 'buy', 'size': order_size}
         print(f"Opened a long position with size: {order_size}")
 
     # Check for a sell signal and if currently in a long position
     elif row['sell_signal'] and position is not None and position['type'] == 'buy':
         print(f"Sell signal at index {i}")
-        bitget.create_market_sell_order('AVAX/USDT', position['size'])
+        bitget.place_market_order('AVAX/USDT', 'sell', position['size'])
         position = None
         print("Closed the long position")
+
+    # Check for a sell signal and if not already in a position
+    elif row['sell_signal'] and position is None:
+        print(f"Sell signal at index {i}")
+        order_size = balance 
+        bitget.place_market_order('AVAX/USDT', 'sell', order_size)
+        position = {'type': 'sell', 'size': order_size}
+        print(f"Opened a short position with size: {order_size}")
+
+    # Check for a buy signal and if currently in a short position
+    elif row['buy_signal'] and position is not None and position['type'] == 'sell':
+        print(f"Buy signal at index {i}")
+        bitget.place_market_order('AVAX/USDT', 'buy', position['size'])
+        position = None
+        print("Closed the short position")
 
 
 # Afficher le DataFrame des bougies Heikin Ashi
