@@ -14,7 +14,7 @@ production = True
 
 pair = "AVAX/USDT:USDT"
 leverage = 1
-type=["long", "short"]
+trade_types = ["long", "short"]
 src="close"
 
 f = open(
@@ -138,7 +138,7 @@ if len(position) > 0:
 
 else:
     print("No active position")
-    if open_long(row) and "long" in type:
+    if open_long(row) and "long" in trade_types:
         long_market_price = float(df.iloc[-1]["close"])
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(
@@ -151,7 +151,7 @@ else:
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
 
-    elif open_short(row) and "short" in type:
+    elif open_short(row) and "short" in trade_types:
         short_market_price = float(df.iloc[-1]["close"])
         short_quantity_in_usd = usd_balance * leverage
         short_quantity = float(bitget.convert_amount_to_precision(pair, float(
