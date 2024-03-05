@@ -2,25 +2,71 @@ import sys
 sys.path.append("./TB")
 import ccxt
 import ta
-from perp_bitget import PerpBitget
-import pandas_ta as pda 
 import pandas as pd
+from utilities.perp_bitget import PerpBitget
+from utilities.custom_indicators import get_n_columns
+from datetime import datetime
+import time
 import json
 
-account_to_select = "bitget_exemple"
-production = True
-
-pair = "AVAX/USDT:USDT"
-leverage = 1
-type=["long", "short"]
-src="close"
+now = datetime.now()
+current_time = now.strftime("%d/%m/%Y %H:%M:%S")
+print("--- Start Execution Time :", current_time, "---")
 
 f = open(
-    "./TB/secret.json",
+    "./live_tools/secret.json",
 )
 secret = json.load(f)
 f.close()
 
+account_to_select = "bitget_exemple"
+production = True
+
+pair = "BTC/USDT:USDT"
+timeframe = "1h"
+leverage = 1
+
+print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
+
+type = ["long", "short"]
+bol_window = 100
+bol_std = 2.25
+min_bol_spread = 0
+long_ma_window = 500
+
+def open_long(row):
+    if (
+        row['n1_close'] < row['n1_higher_band'] 
+        and (row['close'] > row['higher_band']) 
+        and ((row['n1_higher_band'] - row['n1_lower_band']) / row['n1_lower_band'] > min_bol_spread)
+        and (row['close'] > row['long_ma'])
+    ):
+        return True
+    else:
+        return False
+
+def close_long(row):
+    if (row['close'] < row['ma_band']):
+        return True
+    else:
+        return False
+
+def open_short(row):
+    if (
+        row['n1_close'] > row['n1_lower_band'] 
+        and (row['close'] < row['lower_band']) 
+        and ((row['n1_higher_band'] - row['n1_lower_band']) / row['n1_lower_band'] > min_bol_spread)
+        and (row['close'] < row['long_ma'])        
+    ):
+        return True
+    else:
+        return False
+
+def close_short(row):
+    if (row['close'] > row['ma_band']):
+        return True
+    else:
+        return False
 
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
@@ -28,104 +74,85 @@ bitget = PerpBitget(
     password=secret[account_to_select]["password"],
 )
 
-candles = bitget.get_last_historical(pair, "5m", 100)
-df = pd.DataFrame(candles)
+# Get data
+df = bitget.get_more_last_historical_async(pair, timeframe, 1000)
 
-# Calculer les bougies Heikin Ashi
-ha_df = pd.DataFrame(index=df.index, columns=['open', 'high', 'low', 'close'])
+# Populate indicator
+df.drop(columns=df.columns.difference(['open','high','low','close','volume']), inplace=True)
+bol_band = ta.volatility.BollingerBands(close=df["close"], window=bol_window, window_dev=bol_std)
+df["lower_band"] = bol_band.bollinger_lband()
+df["higher_band"] = bol_band.bollinger_hband()
+df["ma_band"] = bol_band.bollinger_mavg()
 
-ha_df['close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
-ha_df['close_original'] = df['close']
+df['long_ma'] = ta.trend.sma_indicator(close=df['close'], window=long_ma_window)
 
-ha_df.at[ha_df.index[0], 'open'] = df.at[df.index[0], 'close']
+df = get_n_columns(df, ["ma_band", "lower_band", "higher_band", "close"], 1)
 
-for i in range(1, len(df)):
-    ha_df.at[df.index[i], 'open'] = (ha_df.at[df.index[i - 1], 'open'] + ha_df.at[df.index[i - 1], 'close']) / 2
-    ha_df.at[df.index[i], 'high'] = max(df.at[df.index[i], 'high'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
-    ha_df.at[df.index[i], 'low'] = min(df.at[df.index[i], 'low'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
+usd_balance = float(bitget.get_usdt_equity())
+print("USD balance :", round(usd_balance, 2), "$")
 
-ST_length = 21
-ST_multiplier = 1.0
-superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
-ha_df['SUPER_TREND1'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-ha_df['SUPER_TREND_DIRECTION1'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
-
-ST_length = 14
-ST_multiplier = 2.0
-superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
-ha_df['SUPER_TREND2'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-ha_df['SUPER_TREND_DIRECTION2'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
-
-# Calculate buy signals
-ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TREND_DIRECTION2'] == 1)
-
-# Calculate sell signals
-ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
-
-
-balance = float(bitget.get_usdt_equity())
-balance = balance * leverage
-print(f"Balance: {round(balance, 2)} $", )
-
-pd.set_option('display.max_rows', None)
-print(ha_df)
-
-# Récupération des positions ouvertes
 positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "entry_price": d["entryPrice"]}
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
-# Boucle principale pour exécuter la stratégie de trading
-for i, row in ha_df.iterrows():
-    row = ha_df.iloc[-2]  # Récupération des données de l'avant-dernière bougie
+row = df.iloc[-2]
 
-    # Si une position est ouverte, vérifier les conditions de clôture
-    if position:
-        position = position[0]  # Sélection de la première position
+if len(position) > 0:
+    position = position[0]
+    print(f"Current position : {position}")
+    if position["side"] == "long" and close_long(row):
+        close_long_market_price = float(df.iloc[-1]["close"])
+        close_long_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
+        exchange_close_long_quantity = close_long_quantity * close_long_market_price
+        print(
+            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
 
-        # Si la position est longue et les conditions de clôture longue sont remplies
-        if position["side"] == "long" and row['sell_signal']:
-            print(f"Sell signal at index {i}, closing the long position")
-            bitget.place_market_order('AVAX/USDT', 'sell', position['size'])
-            position = None
+    elif position["side"] == "short" and close_short(row):
+        close_short_market_price = float(df.iloc[-1]["close"])
+        close_short_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
+        exchange_close_short_quantity = close_short_quantity * close_short_market_price
+        print(
+            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
 
-        # Si la position est courte et les conditions de clôture courte sont remplies
-        elif position["side"] == "short" and row['buy_signal']:
-            print(f"Buy signal at index {i}, closing the short position")
-            bitget.place_market_order('AVAX/USDT', 'buy', position['size'])
-            position = None
-
-    # Si aucune position n'est ouverte, vérifier les conditions d'ouverture
-    else:
-        # Si les conditions d'ouverture longue sont remplies
-        if row['buy_signal']:
-            print(f"Buy signal at index {i}, opening a long position")
-            order_size = balance 
-            bitget.place_market_order('AVAX/USDT', 'buy', order_size)
-            position = {'type': 'long', 'size': order_size}
-            print(f"Opened a long position with size: {order_size}")
-
-            # Placement du stop-loss pour la position longue
-            stop_loss_price = row['close'] * 0.995  # 0.5% sous le prix d'achat
-            bitget.place_limit_stop_loss('AVAX/USDT', 'sell', order_size, stop_loss_price, stop_loss_price, reduce=True)
-            print(f"Stop loss placed for long position at {stop_loss_price}")
-
-        # Si les conditions d'ouverture courte sont remplies
-        elif row['sell_signal']:
-            print(f"Sell signal at index {i}, opening a short position")
-            order_size = balance 
-            bitget.place_market_order('AVAX/USDT', 'sell', order_size)
-            position = {'type': 'short', 'size': order_size}
-            print(f"Opened a short position with size: {order_size}")
-
-            # Placement du stop-loss pour la position courte
-            stop_loss_price = row['close'] * 1.005  # 0.5% au-dessus du prix de vente
-            bitget.place_limit_stop_loss('AVAX/USDT', 'buy', order_size, stop_loss_price, stop_loss_price, reduce=True)
-            print(f"Stop loss placed for short position at {stop_loss_price}")
-
-# Vérification des positions restantes
-if position:
-    print("Remaining position:", position)
 else:
     print("No active position")
+    if open_long(row) and "long" in type:
+        long_market_price = float(df.iloc[-1]["close"])
+        long_quantity_in_usd = usd_balance * leverage
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
+        )))
+        exchange_long_quantity = long_quantity * long_market_price
+        print(
+            f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
+
+    elif open_short(row) and "short" in type:
+        short_market_price = float(df.iloc[-1]["close"])
+        short_quantity_in_usd = usd_balance * leverage
+        short_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
+        )))
+        exchange_short_quantity = short_quantity * short_market_price
+        print(
+            f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
+
+now = datetime.now()
+current_time = now.strftime("%d/%m/%Y %H:%M:%S")
+print("--- End Execution Time :", current_time, "---")
