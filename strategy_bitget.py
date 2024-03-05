@@ -22,51 +22,45 @@ f.close()
 account_to_select = "bitget_exemple"
 production = True
 
-pair = "BTC/USDT:USDT"
-timeframe = "1h"
+pair = "AVAX/USDT:USDT"
+timeframe = "5m"
 leverage = 1
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
 type = ["long", "short"]
-bol_window = 100
-bol_std = 2.25
-min_bol_spread = 0
-long_ma_window = 500
+
+
 
 def open_long(row):
     if (
-        row['n1_close'] < row['n1_higher_band'] 
-        and (row['close'] > row['higher_band']) 
-        and ((row['n1_higher_band'] - row['n1_lower_band']) / row['n1_lower_band'] > min_bol_spread)
-        and (row['close'] > row['long_ma'])
+        row['buy_signal']
     ):
         return True
     else:
         return False
 
 def close_long(row):
-    if (row['close'] < row['ma_band']):
+    if (row['sell_signal']):
         return True
     else:
         return False
 
 def open_short(row):
     if (
-        row['n1_close'] > row['n1_lower_band'] 
-        and (row['close'] < row['lower_band']) 
-        and ((row['n1_higher_band'] - row['n1_lower_band']) / row['n1_lower_band'] > min_bol_spread)
-        and (row['close'] < row['long_ma'])        
+        row['sell_signal']      
     ):
         return True
     else:
         return False
 
 def close_short(row):
-    if (row['close'] > row['ma_band']):
+    if (row['buy_signal']):
+        
         return True
     else:
         return False
+
 
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
@@ -75,21 +69,45 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_more_last_historical_async(pair, timeframe, 1000)
+df = bitget.get_more_last_historical_async(pair, timeframe, 100)
 
 # Populate indicator
-df.drop(columns=df.columns.difference(['open','high','low','close','volume']), inplace=True)
-bol_band = ta.volatility.BollingerBands(close=df["close"], window=bol_window, window_dev=bol_std)
-df["lower_band"] = bol_band.bollinger_lband()
-df["higher_band"] = bol_band.bollinger_hband()
-df["ma_band"] = bol_band.bollinger_mavg()
+# Calculer les bougies Heikin Ashi
+ha_df = pd.DataFrame(index=df.index, columns=['open', 'high', 'low', 'close'])
 
-df['long_ma'] = ta.trend.sma_indicator(close=df['close'], window=long_ma_window)
+ha_df['close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
+ha_df['close_original'] = df['close']
 
-df = get_n_columns(df, ["ma_band", "lower_band", "higher_band", "close"], 1)
+ha_df.at[ha_df.index[0], 'open'] = df.at[df.index[0], 'close']
+
+for i in range(1, len(df)):
+    ha_df.at[df.index[i], 'open'] = (ha_df.at[df.index[i - 1], 'open'] + ha_df.at[df.index[i - 1], 'close']) / 2
+    ha_df.at[df.index[i], 'high'] = max(df.at[df.index[i], 'high'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
+    ha_df.at[df.index[i], 'low'] = min(df.at[df.index[i], 'low'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
+
+ST_length = 21
+ST_multiplier = 1.0
+superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
+ha_df['SUPER_TREND1'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
+ha_df['SUPER_TREND_DIRECTION1'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+
+ST_length = 14
+ST_multiplier = 2.0
+superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
+ha_df['SUPER_TREND2'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
+ha_df['SUPER_TREND_DIRECTION2'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+
+# Calculate buy signals
+ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TREND_DIRECTION2'] == 1)
+
+# Calculate sell signals
+ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
+
+pd.set_option('display.max_rows', None)
+print(ha_df)
 
 positions_data = bitget.get_open_position()
 position = [
