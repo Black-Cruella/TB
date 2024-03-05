@@ -74,37 +74,34 @@ df = bitget.get_more_last_historical_async(pair, timeframe, 100)
 
 # Populate indicator
 # Calculer les bougies Heikin Ashi
-ha_df = pd.DataFrame(index=df.index, columns=['open', 'high', 'low', 'close'])
+df['ha_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
+df['ha_close_original'] = df['close']
 
-ha_df['close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
-ha_df['close_original'] = df['close']
-
-ha_df.at[ha_df.index[0], 'open'] = df.at[df.index[0], 'close']
+df.at[df.index[0], 'ha_open'] = df.at[df.index[0], 'close']
 
 for i in range(1, len(df)):
-    ha_df.at[df.index[i], 'open'] = (ha_df.at[df.index[i - 1], 'open'] + ha_df.at[df.index[i - 1], 'close']) / 2
-    ha_df.at[df.index[i], 'high'] = max(df.at[df.index[i], 'high'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
-    ha_df.at[df.index[i], 'low'] = min(df.at[df.index[i], 'low'], ha_df.at[df.index[i], 'open'], ha_df.at[df.index[i], 'close'])
+    df.at[df.index[i], 'ha_open'] = (df.at[df.index[i - 1], 'ha_open'] + df.at[df.index[i - 1], 'ha_close']) / 2
+    df.at[df.index[i], 'ha_high'] = max(df.at[df.index[i], 'high'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
+    df.at[df.index[i], 'ha_low'] = min(df.at[df.index[i], 'low'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
 
+# Calculer les superTrend
 ST_length = 21
 ST_multiplier = 1.0
-superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
-ha_df['SUPER_TREND1'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-ha_df['SUPER_TREND_DIRECTION1'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+superTrend1 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
+df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
+df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
 ST_length = 14
 ST_multiplier = 2.0
-superTrend = pda.supertrend(ha_df['high'], ha_df['low'], ha_df['close'], length=ST_length, multiplier=ST_multiplier)
-ha_df['SUPER_TREND2'] = superTrend['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-ha_df['SUPER_TREND_DIRECTION2'] = superTrend['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
+df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
+df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-# Calculate buy signals
-ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TREND_DIRECTION2'] == 1)
+# Calculer les signaux d'achat
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
 
-# Calculate sell signals
-ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
-
-df = df.join(ha_df[['open', 'high', 'low', 'close', 'SUPER_TREND1', 'SUPER_TREND_DIRECTION1', 'SUPER_TREND2', 'SUPER_TREND_DIRECTION2', 'buy_signal', 'sell_signal']])
+# Calculer les signaux de vente
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
