@@ -104,11 +104,13 @@ ha_df['buy_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == 1) & (ha_df['SUPER_TRE
 # Calculate sell signals
 ha_df['sell_signal'] = (ha_df['SUPER_TREND_DIRECTION1'] == -1) & (ha_df['SUPER_TREND_DIRECTION2'] == -1)
 
+df = df.join(ha_df[['open', 'high', 'low', 'close', 'SUPER_TREND1', 'SUPER_TREND_DIRECTION1', 'SUPER_TREND2', 'SUPER_TREND_DIRECTION2', 'buy_signal', 'sell_signal']])
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
 pd.set_option('display.max_rows', None)
-print(ha_df)
+print(df)
 
 positions_data = bitget.get_open_position()
 position = [
