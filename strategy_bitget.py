@@ -70,7 +70,7 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_more_last_historical_async(pair, timeframe, 100)
+df = bitget.get_last_historical(pair, timeframe, 100)
 
 # Populate indicator
 # Calculer les bougies Heikin Ashi
