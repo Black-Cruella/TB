@@ -25,7 +25,7 @@ production = True
 
 pair = "AVAX/USDT:USDT"
 timeframe = "5m"
-leverage = 1
+leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
