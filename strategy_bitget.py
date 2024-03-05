@@ -3,8 +3,8 @@ sys.path.append("./TB")
 import ccxt
 import ta
 import pandas as pd
-from utilities.perp_bitget import PerpBitget
-from utilities.custom_indicators import get_n_columns
+from perp_bitget import PerpBitget
+from custom_indicators import get_n_columns
 from datetime import datetime
 import time
 import json
