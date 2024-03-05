@@ -158,6 +158,11 @@ else:
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
 
+        stop_loss_price = long_market_price * 0.995  # 0.5% sous le prix d'achat
+        print(f"Place Long Stop Loss Order at {stop_loss_price}$")
+        if production:
+            bitget.place_limit_stop_loss(pair, 'sell', long_quantity, stop_loss_price, stop_loss_price, reduce=True)
+
     elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
         short_quantity_in_usd = usd_balance * leverage
@@ -170,6 +175,11 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
+
+        stop_loss_price = short_market_price * 1.005  # 0.5% au-dessus du prix de vente
+        print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+        if production:
+            bitget.place_limit_stop_loss(pair, 'buy', short_quantity, stop_loss_price, stop_loss_price, reduce=True)
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
