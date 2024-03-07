@@ -130,6 +130,7 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
+            bitget.cancel_all_open_order()
 
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
@@ -142,6 +143,7 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
+            bitget.cancel_all_open_order()
 
 else:
     print("No active position")
