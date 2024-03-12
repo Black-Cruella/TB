@@ -114,15 +114,18 @@ position = [
 
 row = df.iloc[-2]
 
-orders = bitget.get_open_order(pair)
-order_ids_to_cancel = []
+# Récupérez tous les ordres ouverts sur votre compte
+orders = bitget.get_open_order()
+
+# Parcourez les ordres pour trouver celui que vous souhaitez annuler
 for order in orders:
-    if order["side"] == "sell" and order["info"]["reduceOnly"] == False:
-        order_ids_to_cancel.append(order["id"])
-
-if len(order_ids_to_cancel) > 0:
-    bitget.cancel_order_ids(ids=order_ids_to_cancel, symbol=pair)
-
+    # Vérifiez les détails de chaque ordre
+    print("ID de l'ordre:", order["order_id"])
+    print("Direction:", order["direction"])
+    print("Type:", order["type"])
+    print("Quantité de l'ordre:", order["quantity"])
+    print("Statut:", order["status"])
+    print("------------------------")
 
 if len(position) > 0:
     position = position[0]
