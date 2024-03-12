@@ -114,6 +114,16 @@ position = [
 
 row = df.iloc[-2]
 
+orders = bitget.get_open_order(pair)
+        order_ids_to_cancel = []
+        for order in orders:
+            if order["side"] == "sell" and order["info"]["reduceOnly"] == False:
+                order_ids_to_cancel.append(order["id"])
+
+        if len(order_ids_to_cancel) > 0:
+            bitget.cancel_order_ids(ids=order_ids_to_cancel, symbol=pair)
+            print("ordre annulé")
+
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
