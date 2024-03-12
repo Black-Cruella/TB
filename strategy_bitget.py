@@ -114,6 +114,21 @@ position = [
 
 row = df.iloc[-2]
 
+buy_orders = []
+sell_orders = []
+orders = bitget.get_open_order(pair)
+oder_ids_to_cancel = []
+for order in orders:
+    oder_ids_to_cancel.append(order["id"])
+    if order["side"] == "buy" and order["info"]["reduceOnly"] == False:
+        buy_orders.append(order)
+    elif order["side"] == "sell" and order["info"]["reduceOnly"] == False:
+        sell_orders.append(order)
+
+if len(oder_ids_to_cancel) > 0:
+    bitget.cancel_order_ids(ids=oder_ids_to_cancel, symbol=pair)
+
+
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
@@ -185,6 +200,7 @@ else:
             stop_loss_price = short_market_price * 1.005  # 0.5% au-dessus du prix de vente
             print(f"Place Short Stop Loss Order at {stop_loss_price}$")
             bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
