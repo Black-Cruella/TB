@@ -114,12 +114,17 @@ position = [
 
 row = df.iloc[-2]
 
-# Récupérez tous les ordres ouverts sur votre compte
+# Exécutez la méthode get_open_order avec une paire de trading pour laquelle vous savez qu'il y a des ordres ouverts
 orders = bitget.get_open_order(pair)
 
-# Parcourez les ordres pour trouver celui que vous souhaitez annuler
+# Imprimez le résultat renvoyé par la méthode get_open_order
+print("Orders:", orders)
+
+# Vérifiez la structure des données renvoyées pour vous assurer qu'elle correspond à ce à quoi vous vous attendez
 for order in orders:
-    # Vérifiez les détails de chaque ordre
+    print("Order:", order)
+
+    # Accédez aux détails spécifiques de chaque ordre pour voir s'ils sont corrects
     print("ID de l'ordre:", order["order_id"])
     print("Direction:", order["direction"])
     print("Type:", order["type"])
