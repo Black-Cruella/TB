@@ -114,21 +114,6 @@ position = [
 
 row = df.iloc[-2]
 
-buy_orders = []
-sell_orders = []
-orders = bitget.get_open_order(pair)
-oder_ids_to_cancel = []
-for order in orders:
-    oder_ids_to_cancel.append(order["id"])
-    if order["side"] == "buy" and order["info"]["reduceOnly"] == False:
-        buy_orders.append(order)
-    elif order["side"] == "sell" and order["info"]["reduceOnly"] == False:
-        sell_orders.append(order)
-
-if len(oder_ids_to_cancel) > 0:
-    bitget.cancel_order_ids(ids=oder_ids_to_cancel, symbol=pair)
-
-
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
@@ -143,11 +128,7 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-            if len(orders) > 0:
-                order_ids = [order['id'] for order in orders]
-                bitget.cancel_order_ids(ids=order_ids, symbol=pair)
-                print(f"Cancelled {len(order_ids)} stop loss orders for {pair}")
-
+           
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
@@ -159,11 +140,6 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-            orders = bitget.get_open_order(pair, conditionnal=True)
-            if len(orders) > 0:
-                order_ids = [order['id'] for order in orders]
-                bitget.cancel_order_ids(ids=order_ids, symbol=pair)
-                print(f"Cancelled {len(order_ids)} stop loss orders for {pair}")
 
 else:
     print("No active position")
