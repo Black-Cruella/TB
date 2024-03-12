@@ -184,11 +184,22 @@ class PerpBitget():
             return 0
 
     @authentication_required
-    def get_open_order(self, symbol, conditionnal=False):
-        try:
-            return self._session.fetchOpenOrders(symbol, params={'stop': conditionnal})
-        except BaseException as err:
-            raise Exception("An error occured", err)
+   def get_open_order(self, symbol, conditional=False):
+    try:
+        open_orders = self._session.fetchOpenOrders(symbol, params={'stop': conditional})
+        orders_details = []
+        for order in open_orders:
+            order_detail = {
+                "order_id": order["id"],
+                "direction": order["side"],
+                "type": order["type"],
+                "quantity": order["amount"],
+                "status": order["status"]
+            }
+            orders_details.append(order_detail)
+        return orders_details
+    except Exception as err:
+        raise Exception("An error occurred", err)
 
     @authentication_required
     def get_my_orders(self, symbol):
