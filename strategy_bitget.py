@@ -128,7 +128,10 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-            bitget.cancel_all_open_order()
+            if len(orders) > 0:
+                order_ids = [order['id'] for order in orders]
+                bitget.cancel_order_ids(ids=order_ids, symbol=pair)
+                print(f"Cancelled {len(order_ids)} stop loss orders for {pair}")
 
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
@@ -141,7 +144,11 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-            bitget.cancel_all_open_order()
+            orders = bitget.get_open_order(pair, conditionnal=True)
+            if len(orders) > 0:
+                order_ids = [order['id'] for order in orders]
+                bitget.cancel_order_ids(ids=order_ids, symbol=pair)
+                print(f"Cancelled {len(order_ids)} stop loss orders for {pair}")
 
 else:
     print("No active position")
