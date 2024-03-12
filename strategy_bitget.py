@@ -115,7 +115,7 @@ position = [
 row = df.iloc[-2]
 
 # Récupérez tous les ordres ouverts sur votre compte
-orders = bitget.get_open_order()
+orders = bitget.get_open_order(pair)
 
 # Parcourez les ordres pour trouver celui que vous souhaitez annuler
 for order in orders:
