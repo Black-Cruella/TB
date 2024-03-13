@@ -244,3 +244,17 @@ class PerpBitget():
             )
         except BaseException as err:
             raise Exception("An error occured in cancel_order_ids", err)
+
+@authentication_required
+def get_current_plan_orders(self, symbol=None, productType=None):
+    endpoint = "/api/mix/v1/plan/currentPlan"
+    params = {}
+    if symbol:
+        params["symbol"] = symbol
+    if productType:
+        params["productType"] = productType
+    try:
+        response = self._session.public_get(endpoint, params=params)
+        return response
+    except Exception as err:
+        raise Exception(f"Une erreur est survenue lors de la récupération des ordres planifiés TPSL: {err}")
