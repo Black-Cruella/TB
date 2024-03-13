@@ -114,23 +114,12 @@ position = [
 
 row = df.iloc[-2]
 
-# Exécutez la méthode get_open_order avec une paire de trading pour laquelle vous savez qu'il y a des ordres ouverts
-orders = bitget.get_open_order(pair)
+current_plan_orders = perp_bitget.get_current_plan_orders(pair)
 
-# Imprimez le résultat renvoyé par la méthode get_open_order
-print("Orders:", orders)
+# Ou pour récupérer les ordres TPSL pour un type de produit spécifique
+# current_plan_orders = perp_bitget.get_current_plan_orders(productType="votreTypeDeProduit")
 
-# Vérifiez la structure des données renvoyées pour vous assurer qu'elle correspond à ce à quoi vous vous attendez
-for order in orders:
-    print("Order:", order)
-
-    # Accédez aux détails spécifiques de chaque ordre pour voir s'ils sont corrects
-    print("ID de l'ordre:", order["order_id"])
-    print("Direction:", order["direction"])
-    print("Type:", order["type"])
-    print("Quantité de l'ordre:", order["quantity"])
-    print("Statut:", order["status"])
-    print("------------------------")
+print(current_plan_orders)
 
 if len(position) > 0:
     position = position[0]
