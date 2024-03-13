@@ -114,13 +114,6 @@ position = [
 
 row = df.iloc[-2]
 
-current_plan_orders = bitget.get_current_plan_orders(pair)
-
-# Ou pour récupérer les ordres TPSL pour un type de produit spécifique
-# current_plan_orders = perp_bitget.get_current_plan_orders(productType="votreTypeDeProduit")
-
-print(current_plan_orders)
-
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
