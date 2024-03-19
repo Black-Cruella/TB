@@ -129,6 +129,11 @@ position_info = positions_data[0]
 entry_price = position_info['entryPrice']
 df['entry_price'] = entry_price
 
+# Définition de la formule selon le côté de la position
+df['percentage_difference'] = df.apply(lambda row: ((row['EMA_2'] - row['entry_price']) / row['entry_price']) * 100 
+                                       if row['side'] != 'short' else ((row['entry_price'] - row['EMA_2']) / row['entry_price']) * 100, axis=1)
+
+
 pd.set_option('display.max_columns', None)
 print(df.tail(5))
 
