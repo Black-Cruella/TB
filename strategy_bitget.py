@@ -112,17 +112,17 @@ def calculate_ema(data, alpha):
 alpha = 2 / (2 + 1)  # Calcul du facteur de lissage
 df['EMA_2'] = calculate_ema(df['close'], alpha)
 
-df['entry_price'] = entry_price
-
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
-pd.set_option('display.max_rows', None)
-print(df)
 
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
+
+df['entry_price'] = entry_price
+pd.set_option('display.max_rows', None)
+print(df)
 
 row = df.iloc[-2]
 
