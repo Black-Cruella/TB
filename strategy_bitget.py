@@ -118,6 +118,10 @@ position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
+# Ajouter la position
+current_position = positions_data[0]
+side = current_position['side']
+df['side'] = side
 # Ajouter le Open Price
 position_info = positions_data[0]
 entry_price = position_info['entryPrice']
