@@ -75,10 +75,7 @@ df = bitget.get_last_historical(pair, timeframe, 100)
 # Populate indicator
 # Calculer les bougies Heikin Ashi
 df['ha_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
-df['ha_close_original'] = df['close']
-
 df.at[df.index[0], 'ha_open'] = df.at[df.index[0], 'close']
-
 for i in range(1, len(df)):
     df.at[df.index[i], 'ha_open'] = (df.at[df.index[i - 1], 'ha_open'] + df.at[df.index[i - 1], 'ha_close']) / 2
     df.at[df.index[i], 'ha_high'] = max(df.at[df.index[i], 'high'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
