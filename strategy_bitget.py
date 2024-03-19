@@ -118,8 +118,10 @@ print("USD balance :", round(usd_balance, 2), "$")
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
-    df['entryPrice'] = entry_price
     for d in positions_data if d["symbol"] == pair]
+
+if position:
+    df['entryPrice'] = position[0]["entryPrice"]
 
 pd.set_option('display.max_rows', None)
 print(df)
