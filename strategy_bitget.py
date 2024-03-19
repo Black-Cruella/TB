@@ -105,6 +105,7 @@ df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRE
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
+pd.set_option('display.max_rows', None)
 print(df)
 
 positions_data = bitget.get_open_position()
