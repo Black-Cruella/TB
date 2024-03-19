@@ -108,7 +108,6 @@ def calculate_ema(data, alpha):
         ema_values.append(ema)
     return ema_values
 alpha = 2 / (2 + 1)  # Calcul du facteur de lissage
-df['EMA_2'] = calculate_ema(df['close'], alpha)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
@@ -122,6 +121,9 @@ position = [
 current_position = positions_data[0]
 side = current_position['side']
 df['side'] = side
+
+df['EMA_2'] = calculate_ema(df['close'], alpha)
+
 # Ajouter le Open Price
 position_info = positions_data[0]
 entry_price = position_info['entryPrice']
