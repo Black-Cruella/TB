@@ -103,6 +103,16 @@ df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECT
 # Calculer les signaux de vente
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
 
+alpha = 2 / (2 + 1)  # Calcul du facteur de lissage
+df['EMA_2'] = calculate_ema(df['close'], alpha)
+
+def calculate_ema(data, alpha):
+    ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
+    for i in range(1, len(data)):
+        ema = alpha * data.iloc[i] + (1 - alpha) * ema_values[-1]
+        ema_values.append(ema)
+    return ema_values
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 pd.set_option('display.max_rows', None)
