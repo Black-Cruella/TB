@@ -112,6 +112,8 @@ def calculate_ema(data, alpha):
 alpha = 2 / (2 + 1)  # Calcul du facteur de lissage
 df['EMA_2'] = calculate_ema(df['close'], alpha)
 
+df['entry_price'] = df.apply(add_entry_price, axis=1)
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 pd.set_option('display.max_rows', None)
