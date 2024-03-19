@@ -103,6 +103,7 @@ df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECT
 # Calculer les signaux de vente
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
 
+# Calculer la EMA2
 def calculate_ema(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
     for i in range(1, len(data)):
@@ -120,16 +121,13 @@ position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
-position_info = positions_data[0]  # Sélectionnez le premier élément de la liste, ou choisissez l'élément approprié
-
-# Accédez à la clé 'entryPrice' dans le dictionnaire position_info
+# Ajouter le Open Price
+position_info = positions_data[0]
 entry_price = position_info['entryPrice']
-
-# Créer une colonne 'entry_price' dans votre DataFrame et y assigner la valeur du prix d'entrée
 df['entry_price'] = entry_price
 
-pd.set_option('display.max_rows', None)
-print(df)
+pd.set_option('display.max_columns', None)
+print(df.tail(5))
 
 row = df.iloc[-2]
 
