@@ -156,6 +156,7 @@ df['9_P'] = (percentage_difference > 9).astype(int)
 df.loc[df['side'] == 'short', '9_P'] = (percentage_difference < -9).astype(int)
 df['10_P'] = (percentage_difference > 10).astype(int)
 df.loc[df['side'] == 'short', '10_P'] = (percentage_difference < -10).astype(int)
+df['total_1_P'] = df[['1_P', '2_P', '3_P', '4_P', '5_P', '6_P', '7_P', '8_P', '9_P', '10_P']].sum(axis=1)
 
 pd.set_option('display.max_columns', None)
 print(df.tail(5))
