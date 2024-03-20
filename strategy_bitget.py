@@ -118,7 +118,7 @@ position = [
     for d in positions_data if d["symbol"] == pair]
 
 # Ajouter la position
-if len(positions_data) == 0
+if len(positions_data) == 0:
     df['side'] = None
 else :
     current_position = positions_data[0]
