@@ -42,7 +42,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if (row['sell_signal']):
+    if row['sell_signal'] or row['close_signal']:
         return True
     else:
         return False
@@ -56,7 +56,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if (row['buy_signal']):
+    if row['buy_signal'] or row['close_signal']:
         
         return True
     else:
