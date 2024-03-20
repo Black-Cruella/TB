@@ -128,9 +128,12 @@ else :
 df['EMA_2'] = calculate_ema(df['close'], alpha)
 
 # Ajouter le Open Price
-position_info = positions_data[0]
-entry_price = position_info['entryPrice']
-df['entry_price'] = entry_price
+if len(positions_data) == 0:
+    df['entry_price'] = None
+else:
+    position_info = positions_data[0]
+    entry_price = position_info['entryPrice']
+    df['entry_price'] = entry_price
 
 # Calcul du pourcentage de différence entre EMA_2 et le prix d'entrée
 percentage_difference = ((df['EMA_2'] - df['entry_price']) / df['entry_price']) * 100
