@@ -135,14 +135,11 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-# Calcul du pourcentage de différence entre EMA_2 et le prix d'entrée
 percentage_difference = ((df['EMA_2'] - df['entry_price']) / df['entry_price']) * 100
-
-# Appliquer la condition directement dans une nouvelle colonne
 df['1_P'] = (percentage_difference > 1).astype(int)
-
-# Remplacer les valeurs où la condition n'est pas satisfaite pour les positions "short"
 df.loc[df['side'] == 'short', '1_P'] = (percentage_difference < -1).astype(int)
+df['2_P'] = (percentage_difference > 2).astype(int)
+df.loc[df['side'] == 'short', '2_P'] = (percentage_difference < -2).astype(int)
 
 
 pd.set_option('display.max_columns', None)
