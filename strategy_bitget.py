@@ -118,9 +118,12 @@ position = [
     for d in positions_data if d["symbol"] == pair]
 
 # Ajouter la position
-current_position = positions_data[0]
-side = current_position['side']
-df['side'] = side
+if len(positions_data) == 0
+    df['side'] = None
+else :
+    current_position = positions_data[0]
+    side = current_position['side']
+    df['side'] = side
 
 df['EMA_2'] = calculate_ema(df['close'], alpha)
 
