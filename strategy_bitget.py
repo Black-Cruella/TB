@@ -104,10 +104,10 @@ df['EMA_5'] = calculate_ema5(df['close'], alpha)
 #df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
 # Calculer les signaux d'achat
-df['buy_signal'] = df['SUPER_TREND_DIRECTION1'] == 1)
+df['buy_signal'] = df['SUPER_TREND_DIRECTION1'] == 1
 
 # Calculer les signaux de vente
-df['sell_signal'] = df['SUPER_TREND_DIRECTION1'] == -1)
+df['sell_signal'] = df['SUPER_TREND_DIRECTION1'] == -1
 
 # Calculer la EMA2
 def calculate_ema2(data, alpha):
