@@ -97,6 +97,19 @@ def calculate_ema5(data, alpha):
 alpha = 2 / (5 + 1)  # Calcul du facteur de lissage
 df['EMA_5'] = calculate_ema5(df['close'], alpha)
 
+def calculate_ema_direction(ema_values):
+    ema_direction = [0]  # Initialise la liste de direction de EMA avec une valeur arbitraire, car la première direction n'est pas définie
+    for i in range(1, len(ema_values)):
+        if ema_values[i] > ema_values[i-1]:
+            ema_direction.append(1)
+        elif ema_values[i] < ema_values[i-1]:
+            ema_direction.append(-1)
+        else:
+            ema_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
+    return ema_direction
+
+df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
+
 #ST_length = 14
 #ST_multiplier = 2.0
 #superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
