@@ -74,25 +74,34 @@ df = bitget.get_last_historical(pair, timeframe, 100)
 
 # Populate indicator
 # Calculer les bougies Heikin Ashi
-df['ha_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
-df.at[df.index[0], 'ha_open'] = df.at[df.index[0], 'close']
-for i in range(1, len(df)):
-    df.at[df.index[i], 'ha_open'] = (df.at[df.index[i - 1], 'ha_open'] + df.at[df.index[i - 1], 'ha_close']) / 2
-    df.at[df.index[i], 'ha_high'] = max(df.at[df.index[i], 'high'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
-    df.at[df.index[i], 'ha_low'] = min(df.at[df.index[i], 'low'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
+#df['ha_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
+#df.at[df.index[0], 'ha_open'] = df.at[df.index[0], 'close']
+#for i in range(1, len(df)):
+#    df.at[df.index[i], 'ha_open'] = (df.at[df.index[i - 1], 'ha_open'] + df.at[df.index[i - 1], 'ha_close']) / 2
+#    df.at[df.index[i], 'ha_high'] = max(df.at[df.index[i], 'high'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
+#    df.at[df.index[i], 'ha_low'] = min(df.at[df.index[i], 'low'], df.at[df.index[i], 'ha_open'], df.at[df.index[i], 'ha_close'])
 
 # Calculer les superTrend
 ST_length = 21
-ST_multiplier = 1.0
-superTrend1 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
+ST_multiplier = 1.5
+superTrend1 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-ST_length = 14
-ST_multiplier = 2.0
-superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
-df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+def calculate_ema5(data, alpha):
+    ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
+    for i in range(1, len(data)):
+        ema = alpha * data.iloc[i] + (1 - alpha) * ema_values[-1]
+        ema_values.append(ema)
+    return ema_values
+alpha = 2 / (5 + 1)  # Calcul du facteur de lissage
+df['EMA_5'] = calculate_ema5(df['close'], alpha)
+
+#ST_length = 14
+#ST_multiplier = 2.0
+#superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
+#df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
+#df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
 # Calculer les signaux d'achat
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
@@ -101,7 +110,7 @@ df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECT
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
 
 # Calculer la EMA2
-def calculate_ema(data, alpha):
+def calculate_ema2(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
     for i in range(1, len(data)):
         ema = alpha * data.iloc[i] + (1 - alpha) * ema_values[-1]
@@ -125,7 +134,7 @@ else :
     side = current_position['side']
     df['side'] = side
 
-df['EMA_2'] = calculate_ema(df['close'], alpha)
+df['EMA_2'] = calculate_ema2(df['close'], alpha)
 
 # Ajouter le Open Price
 if len(positions_data) == 0:
