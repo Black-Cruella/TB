@@ -97,13 +97,6 @@ def calculate_ema5(data, alpha):
 alpha = 2 / (5 + 1)  # Calcul du facteur de lissage
 df['EMA_5'] = calculate_ema5(df['close'], alpha)
 
-df['EMA5_DIRECTION'] = 1  # Initialisation de la colonne avec des zéros
-for i in range(1, len(df)):
-    if df['EMA_5'].iloc[i] > df['EMA_5'].iloc[i - 1]:
-        df.at[i, 'EMA5_DIRECTION'] = 1
-    elif df['EMA_5'].iloc[i] < df['EMA_5'].iloc[i - 1]:
-        df.at[i, 'EMA5_DIRECTION'] = -1
-
 #ST_length = 14
 #ST_multiplier = 2.0
 #superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
