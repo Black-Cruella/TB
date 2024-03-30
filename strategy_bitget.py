@@ -189,20 +189,19 @@ df['STOP LOSS'] = df['1.5_SL'] == 1
 row = df.iloc[-2]
 
 stop_loss_triggered = False
-if row['STOP LOSS'] is True :
-    stop_loss_triggered = True  
+ #if row['STOP LOSS'] is True :
+    #stop_loss_triggered = True  
 
-if stop_loss_triggered:
-    df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
-    df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
+#if stop_loss_triggered:
+    #df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
+    #df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
     
-if stop_loss_triggered:
+#if stop_loss_triggered:
     # Vérifiez si un nouveau signal de stop loss a été déclenché ou un nouveau signal de changement de tendance a été détecté
-    if position["side"] == "long" and close_long(row):
-        stop_loss_triggered = False  # Réinitialiser l'état du stop loss
-    elif position["side"] == "short" and close_short(row):
-        stop_loss_triggered = False  # Réinitialiser l'état du stop loss
-df['stop_loss_triggered']
+    #if position["side"] == "long" and close_long(row):
+        #stop_loss_triggered = False  # Réinitialiser l'état du stop loss
+    #elif position["side"] == "short" and close_short(row):
+        #stop_loss_triggered = False  # Réinitialiser l'état du stop loss
 
 
 pd.set_option('display.max_columns', None)
