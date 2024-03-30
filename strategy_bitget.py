@@ -202,6 +202,7 @@ if stop_loss_triggered:
         stop_loss_triggered = False  # Réinitialiser l'état du stop loss
     elif position["side"] == "short" and close_short(row):
         stop_loss_triggered = False  # Réinitialiser l'état du stop loss
+df['stop_loss_triggered']
 
 
 pd.set_option('display.max_columns', None)
