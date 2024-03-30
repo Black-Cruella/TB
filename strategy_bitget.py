@@ -193,9 +193,9 @@ if row['STOP LOSS'] is True :
     stop_loss_triggered = True  
 
 if stop_loss_triggered:
-    # Inverser les signaux d'achat et de vente
-    df['buy_signal'], df['sell_signal'] = df['sell_signal'], df['buy_signal']
-
+    df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
+    df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
+    
 if stop_loss_triggered:
     # Vérifiez si un nouveau signal de stop loss a été déclenché ou un nouveau signal de changement de tendance a été détecté
     if position["side"] == "long" and close_long(row):
