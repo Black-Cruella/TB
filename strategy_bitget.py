@@ -187,7 +187,7 @@ df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 0.2).astype(i
 df['STOP LOSS'] = df['1.5_SL'] == 1
 
 stop_loss_triggered = False
-if row['STOP LOSS'] is true :
+if row['STOP LOSS'] is True :
     stop_loss_triggered = True  
 
 if stop_loss_triggered:
