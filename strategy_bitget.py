@@ -186,6 +186,8 @@ df['1.5_SL'] = (percentage_difference < -1.5).astype(int)
 df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 1.5).astype(int)
 df['STOP LOSS'] = df['1.5_SL'] == 1
 
+row = df.iloc[-2]
+
 stop_loss_triggered = False
 if row['STOP LOSS'] is True :
     stop_loss_triggered = True  
@@ -204,8 +206,6 @@ if stop_loss_triggered:
 
 pd.set_option('display.max_columns', None)
 print(df.tail(5))
-
-row = df.iloc[-2]
 
 if len(position) > 0:
     position = position[0]
