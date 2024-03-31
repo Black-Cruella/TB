@@ -31,7 +31,7 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
 type = ["long", "short"]
 
-def open_long(row, stop_loss_triggered):
+def open_long(row):
     if row['STOP LOSS']:
         stop_loss_triggered = True
         if stop_loss_triggered:
@@ -40,14 +40,14 @@ def open_long(row, stop_loss_triggered):
                 return True
             else:
                 return False
-        else:
+    else:
             # Logique normale sans le stop loss
-            if row['sell_signal']:
-                return True
-            else:
-                return False
+        if row['sell_signal']:
+            return True
+        else:
+            return False
 
-def close_long(row, stop_loss_triggered):
+def close_long(row):
     if stop_loss_triggered:
         # Inverse la logique si le stop loss est déclenché
         if row['sell_signal'] or row['close_signal']:
@@ -62,7 +62,7 @@ def close_long(row, stop_loss_triggered):
         else:
             return False
 
-def open_short(row, stop_loss_triggered):
+def open_short(row):
     if row['STOP LOSS']:
         stop_loss_triggered = True
         if stop_loss_triggered:
@@ -71,14 +71,14 @@ def open_short(row, stop_loss_triggered):
                 return True
             else:
                 return False
+    else:
+        # Logique normale sans le stop loss
+        if row['buy_signal']:
+            return True
         else:
-            # Logique normale sans le stop loss
-            if row['buy_signal']:
-                return True
-            else:
-                return False
+            return False
 
-def close_short(row, stop_loss_triggered):
+def close_short(row):
     if stop_loss_triggered:
         # Inverse la logique si le stop loss est déclenché
         if row['buy_signal'] or row['close_signal']:
