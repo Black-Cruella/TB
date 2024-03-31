@@ -52,7 +52,11 @@ def open_long(row):
 def close_long(row):
     global stop_loss_triggered
     if row['STOP LOSS']:
-        # Inverse la logique si le stop loss est déclenché
+        if row['sell_signal']:
+            return True
+        else:
+            return False
+    if stop_loss_triggered:    
         if row['sell_signal'] or row['close_signal']:
             stop_loss_triggered = False
             return True
