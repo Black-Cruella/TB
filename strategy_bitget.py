@@ -31,36 +31,67 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
 type = ["long", "short"]
 
+def open_long(row, stop_loss_triggered):
+    if row['STOP LOSS']:
+        stop_loss_triggered = True
+        if stop_loss_triggered:
+            # Inverse la logique si le stop loss est déclenché
+            if row['buy_signal']:
+                return True
+            else:
+                return False
+        else:
+            # Logique normale sans le stop loss
+            if row['sell_signal']:
+                return True
+            else:
+                return False
 
-
-def open_long(row):
-    if (
-        row['sell_signal']
-    ):
-        return True
+def close_long(row, stop_loss_triggered):
+    if stop_loss_triggered:
+        # Inverse la logique si le stop loss est déclenché
+        if row['sell_signal'] or row['close_signal']:
+            stop_loss_triggered = False
+            return True
+        else:
+            return False
     else:
-        return False
+        # Logique normale sans le stop loss
+        if row['buy_signal'] or row['close_signal']:
+            return True
+        else:
+            return False
 
-def close_long(row):
-    if row['buy_signal'] or row['close_signal']:
-        return True
-    else:
-        return False
+def open_short(row, stop_loss_triggered):
+    if row['STOP LOSS']:
+        stop_loss_triggered = True
+        if stop_loss_triggered:
+            # Inverse la logique si le stop loss est déclenché
+            if row['sell_signal']:
+                return True
+            else:
+                return False
+        else:
+            # Logique normale sans le stop loss
+            if row['buy_signal']:
+                return True
+            else:
+                return False
 
-def open_short(row):
-    if (
-        row['buy_signal']      
-    ):
-        return True
+def close_short(row, stop_loss_triggered):
+    if stop_loss_triggered:
+        # Inverse la logique si le stop loss est déclenché
+        if row['buy_signal'] or row['close_signal']:
+            stop_loss_triggered = False
+            return True
+        else:
+            return False
     else:
-        return False
-
-def close_short(row):
-    if row['sell_signal'] or row['close_signal']:
-        
-        return True
-    else:
-        return False
+        # Logique normale sans le stop loss
+        if row['sell_signal'] or row['close_signal']:
+            return True
+        else:
+            return False
 
 
 bitget = PerpBitget(
@@ -185,8 +216,6 @@ df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
 df['1.5_SL'] = (percentage_difference < -0.8).astype(int)
 df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 0.8).astype(int)
 df['STOP LOSS'] = df['1.5_SL'] == 1
-df['ST_buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1) & (df['STOP LOSS'] == True)
-df['ST_sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1) & (df['STOP LOSS'] == True)
 
 
 row = df.iloc[-2]
