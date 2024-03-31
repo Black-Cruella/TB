@@ -189,7 +189,7 @@ df['STOP LOSS'] = df['1.5_SL'] == 1
 row = df.iloc[-2]
 
 stop_loss_triggered = False
- if row['STOP LOSS'] is True :
+ if row['STOP LOSS'] is True:
     stop_loss_triggered = True  
 
 if stop_loss_triggered:
