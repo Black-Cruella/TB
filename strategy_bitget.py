@@ -31,6 +31,8 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
 type = ["long", "short"]
 
+stop_loss_triggered = False
+
 def open_long(row):
     if row['STOP LOSS']:
         stop_loss_triggered = True
