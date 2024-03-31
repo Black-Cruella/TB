@@ -34,6 +34,7 @@ type = ["long", "short"]
 stop_loss_triggered = False
 
 def open_long(row):
+    global stop_loss_triggered
     if row['STOP LOSS']:
         stop_loss_triggered = True
         if stop_loss_triggered:
@@ -50,6 +51,7 @@ def open_long(row):
             return False
 
 def close_long(row):
+    global stop_loss_triggered
     if stop_loss_triggered:
         # Inverse la logique si le stop loss est déclenché
         if row['sell_signal'] or row['close_signal']:
@@ -65,6 +67,7 @@ def close_long(row):
             return False
 
 def open_short(row):
+    global stop_loss_triggered
     if row['STOP LOSS']:
         stop_loss_triggered = True
         if stop_loss_triggered:
@@ -81,6 +84,7 @@ def open_short(row):
             return False
 
 def close_short(row):
+    global stop_loss_triggered
     if stop_loss_triggered:
         # Inverse la logique si le stop loss est déclenché
         if row['buy_signal'] or row['close_signal']:
