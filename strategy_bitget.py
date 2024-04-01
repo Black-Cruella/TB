@@ -31,7 +31,12 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
 type = ["long", "short"]
 
-stop_loss_triggered = False
+try:
+    with open('stop_loss_triggered.txt', 'r') as file:
+        stop_loss_triggered = file.read() == 'True'
+except FileNotFoundError:
+    stop_loss_triggered = False
+print("Stop_loss_triggered is:", stop_loss_triggered)
 
 def open_long(row):
     global stop_loss_triggered
@@ -296,7 +301,11 @@ else:
             #print(f"Place Short Stop Loss Order at {stop_loss_price}$")
             #bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
+with open('stop_loss_triggered.txt', 'w') as file:
+    file.write(str(stop_loss_triggered))
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- End Execution Time :", current_time, "---")
+
+
