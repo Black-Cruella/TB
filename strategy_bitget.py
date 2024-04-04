@@ -24,7 +24,7 @@ account_to_select = "bitget_exemple"
 production = True
 
 pair = "AVAX/USDT:USDT"
-timeframe = "5m"
+timeframe = "1m"
 leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
@@ -41,12 +41,12 @@ print("Stop_loss_triggered is:", stop_loss_triggered)
 def open_long(row):
     global stop_loss_triggered
     if stop_loss_triggered:
-        if row['buy_signal']:
+        if row['sell_signal']:
             return True
         else:
             return False
     else:
-        if row['sell_signal']:
+        if row['buy_signal']:
             return True
         else:
             return False
@@ -54,20 +54,20 @@ def open_long(row):
 def close_long(row):
     global stop_loss_triggered
     if row['STOP LOSS']:
-        if row['sell_signal']:
+        if row['buy_signal']:
             stop_loss_triggered = True
             return True
         else:
             return False
     elif stop_loss_triggered:    
-        if row['sell_signal'] or row['close_signal']:
+        if row['buy_signal'] or row['close_signal']:
             stop_loss_triggered = False
             return True
         else:
             return False
     else:
         # Logique normale sans le stop loss
-        if row['buy_signal'] or row['close_signal']:
+        if row['sell_signal'] or row['close_signal']:
             return True
         else:
             return False
@@ -75,12 +75,12 @@ def close_long(row):
 def open_short(row):
     global stop_loss_triggered
     if stop_loss_triggered:
-        if row['sell_signal']:
+        if row['buy_signal']:
             return True
         else:
             return False
     else:
-        if row['buy_signal']:
+        if row['sell_signal']:
             return True
         else:
             return False
@@ -88,20 +88,20 @@ def open_short(row):
 def close_short(row):
     global stop_loss_triggered
     if row['STOP LOSS']:
-        if row['buy_signal']:
+        if row['sell_signal']:
             stop_loss_triggered = True
             return True
         else:
             return False
     elif stop_loss_triggered:
-        if row['buy_signal'] or row['close_signal']:
+        if row['sell_signal'] or row['close_signal']:
             stop_loss_triggered = False
             return True
         else:
             return False
     else:
         # Logique normale sans le stop loss
-        if row['sell_signal'] or row['close_signal']:
+        if row['buy_signal'] or row['close_signal']:
             return True
         else:
             return False
@@ -227,7 +227,7 @@ df['TOTAL_P'] = df[['1_P', '2_P', '3_P', '4_P', '5_P', '6_P', '7_P', '8_P', '9_P
 df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
 
 df['1.5_SL'] = (percentage_difference < -0.8).astype(int)
-df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 0.8).astype(int)
+df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 10).astype(int)
 df['STOP LOSS'] = df['1.5_SL'] == 1
 
 
@@ -279,10 +279,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        if production:
-            stop_loss_price = long_market_price * 1.005  # 1% sous le prix d'achat
-            print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
+        #if production:
+        #    stop_loss_price = long_market_price * 1.005  # 1% sous le prix d'achat
+        #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
+        #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
     elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
@@ -296,10 +296,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        if production:
-            stop_loss_price = short_market_price * 0.995  # 1% au-dessus du prix de vente
-            print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+        #if production:
+        #    stop_loss_price = short_market_price * 0.995  # 1% au-dessus du prix de vente
+        #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+        #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
 with open('stop_loss_triggered.txt', 'w') as file:
     file.write(str(stop_loss_triggered))
