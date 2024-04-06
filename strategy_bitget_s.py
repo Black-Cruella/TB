@@ -144,13 +144,6 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
-#ST_length = 14
-#ST_multiplier = 2.0
-#superTrend2 = pda.supertrend(df['ha_high'], df['ha_low'], df['ha_close'], length=ST_length, multiplier=ST_multiplier)
-#df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-#df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
-
-
 # Calculer les signaux d'achat
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 
@@ -183,43 +176,6 @@ else :
     df['side'] = side
 
 df['EMA_2'] = calculate_ema2(df['close'], alpha)
-
-# Ajouter le Open Price
-if len(positions_data) == 0:
-    df['entry_price'] = None
-else:
-    position_info = positions_data[0]
-    entry_price = position_info['entryPrice']
-    df['entry_price'] = entry_price
-
-percentage_difference = ((df['EMA_2'] - df['entry_price']) / df['entry_price']) * 100
-df['1_P'] = (percentage_difference > 1).astype(int)
-df.loc[df['side'] == 'short', '1_P'] = (percentage_difference < -1).astype(int)
-df['2_P'] = (percentage_difference > 2).astype(int)
-df.loc[df['side'] == 'short', '2_P'] = (percentage_difference < -2).astype(int)
-df['3_P'] = (percentage_difference > 3).astype(int)
-df.loc[df['side'] == 'short', '3_P'] = (percentage_difference < -3).astype(int)
-df['4_P'] = (percentage_difference > 4).astype(int)
-df.loc[df['side'] == 'short', '4_P'] = (percentage_difference < -4).astype(int)
-df['5_P'] = (percentage_difference > 5).astype(int)
-df.loc[df['side'] == 'short', '5_P'] = (percentage_difference < -5).astype(int)
-df['6_P'] = (percentage_difference > 6).astype(int)
-df.loc[df['side'] == 'short', '6_P'] = (percentage_difference < -6).astype(int)
-df['7_P'] = (percentage_difference > 7).astype(int)
-df.loc[df['side'] == 'short', '7_P'] = (percentage_difference < -7).astype(int)
-df['8_P'] = (percentage_difference > 8).astype(int)
-df.loc[df['side'] == 'short', '8_P'] = (percentage_difference < -8).astype(int)
-df['9_P'] = (percentage_difference > 9).astype(int)
-df.loc[df['side'] == 'short', '9_P'] = (percentage_difference < -9).astype(int)
-df['10_P'] = (percentage_difference > 10).astype(int)
-df.loc[df['side'] == 'short', '10_P'] = (percentage_difference < -10).astype(int)
-df['TOTAL_P'] = df[['1_P', '2_P', '3_P', '4_P', '5_P', '6_P', '7_P', '8_P', '9_P', '10_P']].sum(axis=1)
-df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
-
-df['1.5_SL'] = (percentage_difference < -0.8).astype(int)
-df.loc[df['side'] == 'short', '1.5_SL'] = (percentage_difference > 0.8).astype(int)
-df['STOP LOSS'] = df['1.5_SL'] == 1
-
 
 row = df.iloc[-2]
 
