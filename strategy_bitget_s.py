@@ -1,9 +1,9 @@
 import sys
-sys.path.append("./TB")
+sys.path.append("./TBWOTP")
 import ccxt
 import ta
 import pandas as pd
-import pandas_ta as pda 
+import pandas_ta as pda
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
@@ -15,7 +15,7 @@ current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- Start Execution Time :", current_time, "---")
 
 f = open(
-    "./TB/secret.json",
+    "./TBWOTP/secret.json",
 )
 secret = json.load(f)
 f.close()
@@ -59,7 +59,7 @@ def close_long(row):
             return True
         else:
             return False
-    elif stop_loss_triggered:    
+    elif stop_loss_triggered:
         if row['sell_signal'] or row['close_signal']:
             stop_loss_triggered = False
             return True
@@ -105,7 +105,6 @@ def close_short(row):
             return True
         else:
             return False
-
 
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
@@ -160,6 +159,7 @@ df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 #df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 #df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
+
 # Calculer les signaux d'achat
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 
@@ -181,8 +181,7 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
-    for d in positions_data if d["symbol"] == pair]
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d[">    for d in positions_data if d["symbol"] == pair]
 
 # Ajouter la position
 if len(positions_data) == 0:
@@ -250,7 +249,7 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-           
+
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
@@ -262,8 +261,8 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-        
-        
+
+
 
 else:
     print("No active position")
@@ -279,10 +278,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        if production:
-            stop_loss_price = long_market_price * 1.005  # 1% sous le prix d'achat
-            print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
+        #if production:
+            #stop_loss_price = long_market_price * 0.99  # 1% sous le prix d'achat
+            #print(f"Place Long Stop Loss Order at {stop_loss_price}$")
+            #bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
     elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
@@ -296,10 +295,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        if production:
-            stop_loss_price = short_market_price * 0.995  # 1% au-dessus du prix de vente
-            print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+        #if production:
+            #stop_loss_price = short_market_price * 1.01  # 1% au-dessus du prix de vente
+            #print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+            #bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
 with open('stop_loss_triggered.txt', 'w') as file:
     file.write(str(stop_loss_triggered))
@@ -307,3 +306,6 @@ with open('stop_loss_triggered.txt', 'w') as file:
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- End Execution Time :", current_time, "---")
+
+
+
