@@ -165,15 +165,8 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d[">    for d in positions_data if d["symbol"] == pair]
-
-# Ajouter la position
-if len(positions_data) == 0:
-    df['side'] = None
-else :
-    current_position = positions_data[0]
-    side = current_position['side']
-    df['side'] = side
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
+    for d in positions_data if d["symbol"] == pair]
 
 df['EMA_2'] = calculate_ema2(df['close'], alpha)
 
