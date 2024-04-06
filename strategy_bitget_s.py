@@ -112,8 +112,6 @@ position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
-df['EMA_2'] = calculate_ema2(df['close'], alpha)
-
 row = df.iloc[-2]
 
 pd.set_option('display.max_columns', None)
