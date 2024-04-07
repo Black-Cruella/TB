@@ -119,6 +119,19 @@ def calculate_macd(df, short_window=12, long_window=26, signal_window=9):
 macd, _, _ = calculate_macd(df)
 df['MACD'] = macd
 
+def MACD_direction(macd_values):
+    macd_direction = [0]  # Initialise la liste de direction de EMA avec une valeur arbitraire, car la première direction n'est pas définie
+    for i in range(1, len(macd_values)):
+        if macd_values[i] > macd_values[i-1]:
+            macd_direction.append(1)
+        elif macd_values[i] < macd_values[i-1]:
+            macd_direction.append(-1)
+        else:
+            macd_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
+    return macd_direction
+
+df['MACD_direction'] = MACD_direction(macd)
+
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
 
