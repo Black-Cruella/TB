@@ -104,8 +104,9 @@ def fisher_transform(df, length=9):
     high_ = df['high'].rolling(window=length).max()
     low_ = df['low'].rolling(window=length).min()
     hl2 = (df['high'] + df['low']) / 2
-    
-    value = 0.66 * ((hl2 - low_) / (high_ - low_) - 0.5) + 0.67 * df['fish_value'].shift(1)
+
+    value = 0.0
+    value = 0.66 * ((hl2 - low_) / (high_ - low_) - 0.5) + 0.67 * df['value'].shift(1)
     fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['fish1'].shift(1)
     fish2 = fish1.shift(1)
     
