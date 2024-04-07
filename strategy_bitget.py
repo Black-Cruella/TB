@@ -101,33 +101,24 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
-def fisher_transform(df, length=9):
-    df_copy = df.copy()  # Work on a copy of the DataFrame to avoid modifying the original data
-    df_copy['hl2'] = (df_copy['high'] + df_copy['low']) / 2
+def calculate_macd(df, short_window=12, long_window=26, signal_window=9):
+    # Calculer les moyennes mobiles exponentielles (EMA)
+    short_ema = df['Close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
+    long_ema = df['Close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
     
-    # Find the highest and lowest values of hl2 over the specified length
-    df_copy['high_'] = df_copy['hl2'].rolling(window=length).max()
-    df_copy['low_'] = df_copy['hl2'].rolling(window=length).min()
+    # Calculer la différence entre les deux EMA pour obtenir le MACD
+    macd = short_ema - long_ema
     
-    # Normalize the hl2 values
-    value_raw = 0.66 * ((df_copy['hl2'] - df_copy['low_']) / (df_copy['high_'] - df_copy['low_']) - 0.5)
-    df_copy['value'] = np.clip(value_raw, -0.99, 0.99)  # Using np.clip for vectorized limiting
+    # Calculer la ligne de signal (EMA du MACD)
+    signal_line = macd.ewm(span=signal_window, min_periods=1, adjust=False).mean()
     
-    # Smooth the value using the previous value
-    df_copy['value'] = 0.67 * df_copy['value'].shift(1) + (1 - 0.67) * df_copy['value']
+    # Calculer l'histogramme MACD (différence entre le MACD et sa ligne de signal)
+    macd_histogram = macd - signal_line
     
-    # Calculate the Fisher Transform
-    df_copy['fish1'] = 0.5 * np.log((1 + df_copy['value']) / (1 - df_copy['value']))
-    df_copy['fish1'] = 0.5 * df_copy['fish1'].shift(1) + (1 - 0.5) * df_copy['fish1']
-    
-    # Returning both Fisher and Trigger line might be useful
-    df_copy['trigger'] = df_copy['fish1'].shift(1)
-    
-    return df_copy[['fish1', 'trigger']]
+    return macd, signal_line, macd_histogram
 
-fisher_result = fisher_transform(df)
-df['Fisher'] = fisher_result['fish1']
-df['Trigger'] = fisher_result['trigger']
+macd, _, _ = calculate_macd(df)
+df['MACD'] = macd
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
