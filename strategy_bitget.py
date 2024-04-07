@@ -137,22 +137,24 @@ df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
 df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
-df['position'] = ''
+position = None  # Initialiser la position à None
 
-# Iterate over each row
-for i in range(len(df)):
-    # Check if it's the first row or if the previous position was short and buy signal is triggered
-    if i == 0 or (df['position'][i-1] == 'short' and df['buy_signal'][i]):
-        df.at[i, 'position'] = 'long'
-    # Check if the previous position was long and sell signal is triggered
-    elif df['position'][i-1] == 'long' and df['sell_signal'][i]:
-        df.at[i, 'position'] = 'short'
-    # If none of the above conditions are met, keep the previous position
+def calculate_position(row):
+    global position  # Utiliser la variable de position globale
+
+    if row['sell_signal']:  # Si le sell signal est déclenché
+        position = 'short'  # Changer la position à short
+        return position
+
+    elif row['buy_signal']:  # Si le buy signal est déclenché
+        if position == 'short':  # Si la position précédente était short
+            position = 'long'  # Changer la position à long
+        return position
+
     else:
-        df.at[i, 'position'] = df['position'][i-1]
+        return position  # Retourner la position actuelle
 
-# Optional: Fill any remaining NaN values with the last known position
-df['position'] = df['position'].fillna(method='ffill')
+df['position'] = df.apply(calculate_position, axis=1)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
