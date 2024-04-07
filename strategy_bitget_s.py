@@ -32,7 +32,7 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['buy_signal']:
+    if row['buy_signal'] or row['buy_signal2']:
         return True
     else:
         return False
@@ -44,7 +44,7 @@ def close_long(row):
         return False
 
 def open_short(row):
-    if row['sell_signal']:
+    if row['sell_signal'] or row['sell_signal2']:
         return True
     else:
         return False
@@ -99,9 +99,20 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
+def detecter_couleur_bougie(row):
+    if row['close'] < row['open']:
+        return 'Rouge'
+    elif row['close'] > row['open']:
+        return 'Verte'
+    else:
+        return 'Neutre'
+df['couleur_bougie'] = df.apply(detecter_couleur_bougie, axis=1)
+
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
+df['sell_signal2'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['couleur_bougie'] == 'Rouge') & (df['couleur_bougie'].shift(1) == 'Verte')
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1)
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1)
+df['buy_signal2'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['couleur_bougie'] == 'Verte') & (df['couleur_bougie'].shift(1) == 'Rouge')
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
 
 usd_balance = float(bitget.get_usdt_equity())
