@@ -101,13 +101,15 @@ def calculate_ema_direction(ema_values):
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
 def fisher_transform(df, length=9):
-    median_price = (df['high'] + df['low']) / 2
-    median_price_diff = median_price.diff()
-    median_price_diff_sum = median_price_diff.rolling(window=length).sum()
-    median_price_diff_square_sum = (median_price_diff ** 2).rolling(window=length).sum()
+    hl2 = (df['high'] + df['low']) / 2
+    highest_high = hl2.rolling(window=length).max()
+    lowest_low = hl2.rolling(window=length).min()
 
-    fisher = 0.5 * pd.Series((2 * (median_price_diff_sum - median_price_diff_sum.shift(length))) / (median_price_diff_square_sum + 1e-10), name='fisher')
-    return fisher
+    value = 0.66 * ((hl2 - lowest_low) / (highest_high - lowest_low) - 0.5) + 0.67 * df['fisher'].shift(1)
+    value = value.apply(lambda x: 0.999 if x > 0.999 else (-0.999 if x < -0.999 else x))
+
+    fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['fisher'].shift(1)
+    return fish1
 
 df['fisher'] = fisher_transform(df, length=9)
 
