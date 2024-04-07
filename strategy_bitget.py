@@ -102,8 +102,8 @@ df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
 def calculate_macd(df, short_window=12, long_window=26, signal_window=9):
     # Calculer les moyennes mobiles exponentielles (EMA)
-    short_ema = df['Close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
-    long_ema = df['Close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
+    short_ema = df['close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
+    long_ema = df['close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
     
     # Calculer la différence entre les deux EMA pour obtenir le MACD
     macd = short_ema - long_ema
