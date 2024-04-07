@@ -32,7 +32,7 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['buy_signal']:
+    if row['buy_signal'] and row['signal'] == 'GO':
         return True
     else:
         return False
@@ -44,7 +44,7 @@ def close_long(row):
         return False
 
 def open_short(row):
-    if row['sell_signal']:
+    if row['sell_signal'] and row['signal'] == 'GO':
         return True
     else:
         return False
@@ -132,9 +132,9 @@ def MACD_direction(macd_values):
 
 df['MACD_direction'] = MACD_direction(macd)
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['signal'] == 'GO')
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['signal'] == 'GO')
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
 df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
 position = None  # Initialiser la position à None
