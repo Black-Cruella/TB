@@ -132,9 +132,9 @@ def MACD_direction(macd_values):
 
 df['MACD_direction'] = MACD_direction(macd)
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['signal'] == 'GO')
 df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['signal'] == 'GO')
 df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
 position = None  # Initialiser la position à None
@@ -222,10 +222,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        #if production:
-        #    stop_loss_price = long_market_price * 1.005  # 1% sous le prix d'achat
-        #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
+        if production:
+            stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
+            print(f"Place Long Stop Loss Order at {stop_loss_price}$")
+            bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
     elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
@@ -239,10 +239,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        #if production:
-        #    stop_loss_price = short_market_price * 0.995  # 1% au-dessus du prix de vente
-        #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+        if production:
+            stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
+            print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+            bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
