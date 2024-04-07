@@ -132,6 +132,11 @@ def MACD_direction(macd_values):
 
 df['MACD_direction'] = MACD_direction(macd)
 
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
+df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
+df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
+
 df['position'] = ''
 
 # Iterate over each row
@@ -148,11 +153,6 @@ for i in range(len(df)):
 
 # Optional: Fill any remaining NaN values with the last known position
 df['position'] = df['position'].fillna(method='ffill')
-
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
-df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
-df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
