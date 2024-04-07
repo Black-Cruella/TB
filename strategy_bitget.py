@@ -4,7 +4,6 @@ import ccxt
 import ta
 import pandas as pd
 import pandas_ta as pda 
-import numpy as np
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
