@@ -32,7 +32,7 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['buy_signal'] or row['buy_signal2']:
+    if row['buy_signal']:
         return True
     else:
         return False
@@ -44,7 +44,7 @@ def close_long(row):
         return False
 
 def open_short(row):
-    if row['sell_signal'] or row['sell_signal2']:
+    if row['sell_signal']:
         return True
     else:
         return False
@@ -72,7 +72,7 @@ superTrend1 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_lengt
 df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-ST_length = 14
+ST_length = 10
 ST_multiplier = 2.5
 superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
@@ -132,8 +132,10 @@ def MACD_direction(macd_values):
 
 df['MACD_direction'] = MACD_direction(macd)
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
+df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
+df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
