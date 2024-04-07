@@ -4,6 +4,7 @@ import ccxt
 import ta
 import pandas as pd
 import pandas_ta as pda 
+import numpy as np
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
@@ -100,19 +101,16 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
+df['Fisher'] = fisher_transform(df, length=9)
 def fisher_transform(df, length=9):
     high_ = df['high'].rolling(window=length).max()
     low_ = df['low'].rolling(window=length).min()
     hl2 = (df['high'] + df['low']) / 2
+    
+    value = 0.66 * ((hl2 - low_) / (high_ - low_) - 0.5) + 0.67 * df['Fisher'].shift(1)
+    fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['Fisher'].shift(1)
 
-    value = 0.0
-    value = 0.66 * ((hl2 - low_) / (high_ - low_) - 0.5) + 0.67 * df['value'].shift(1)
-    fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['fish1'].shift(1)
-    fish2 = fish1.shift(1)
-    
     return fish1
-    
-df['Fisher'] = fisher_transform(df, length=9)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
