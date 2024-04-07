@@ -100,19 +100,18 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
-df['fisher'] = np.nan
 def fisher_transform(df, length=9):
+    high_ = df['high'].rolling(window=length).max()
+    low_ = df['low'].rolling(window=length).min()
     hl2 = (df['high'] + df['low']) / 2
-    highest_high = hl2.rolling(window=length).max()
-    lowest_low = hl2.rolling(window=length).min()
-
-    value = 0.66 * ((hl2 - lowest_low) / (highest_high - lowest_low) - 0.5) + 0.67 * df['fisher'].shift(1)
-    value = value.apply(lambda x: 0.999 if x > 0.999 else (-0.999 if x < -0.999 else x))
-
-    fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['fisher'].shift(1)
+    
+    value = 0.66 * ((hl2 - low_) / (high_ - low_) - 0.5) + 0.67 * df['fish_value'].shift(1)
+    fish1 = 0.5 * np.log((1 + value) / (1 - value)) + 0.5 * df['fish1'].shift(1)
+    fish2 = fish1.shift(1)
+    
     return fish1
-
-df['fisher'] = fisher_transform(df, length=9)
+    
+df['Fisher'] = fisher_transform(df, length=9)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['EMA_direction'] == 1)
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['EMA_direction'] == -1)
