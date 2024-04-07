@@ -138,7 +138,6 @@ df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] 
 df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
 
 position = None  # Initialiser la position à None
-
 def calculate_position(row):
     global position  # Utiliser la variable de position globale
 
@@ -153,8 +152,19 @@ def calculate_position(row):
 
     else:
         return position  # Retourner la position actuelle
-
 df['position'] = df.apply(calculate_position, axis=1)
+
+
+prev_position = None  # Initialiser la position précédente à None
+def calculate_signal(row):
+    global prev_position  # Utiliser la variable de position précédente globale
+
+    if row['position'] != prev_position:  # Si la position actuelle est différente de la position précédente
+        prev_position = row['position']  # Mettre à jour la position précédente
+        return 'GO'  # Retourner 'GO' pour indiquer un changement de position
+    else:
+        return 'WAIT'  # Sinon, retourner 'WAIT'
+df['signal'] = df.apply(calculate_signal, axis=1)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
