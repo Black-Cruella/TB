@@ -100,6 +100,7 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
+df['fisher'] = np.nan
 def fisher_transform(df, length=9):
     hl2 = (df['high'] + df['low']) / 2
     highest_high = hl2.rolling(window=length).max()
