@@ -133,9 +133,9 @@ def MACD_direction(macd_values):
 df['MACD_direction'] = MACD_direction(macd)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
-df['close_long'] = (df['EMA_direction'] == -1) & (df['MACD'].shift(1) > df['MACD'])
+df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
-df['close_short'] = (df['EMA_direction'] == 1) & (df['MACD'].shift(1) < df['MACD'])
+df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
 
 position = None  # Initialiser la position à None
 def calculate_position(row):
