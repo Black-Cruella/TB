@@ -166,7 +166,7 @@ def calculate_signal(row):
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
 
-    elif row['position'] == 'long' and row['buy_signal'] and not row['prev_buy_signal']::  
+    elif row['position'] == 'long' and row['buy_signal'] and not row['prev_buy_signal']:
         return 'GO'  # Retourner 'GO'
 
     elif row['position'] == 'short' and row['sell_signal'] and not row['prev_sell_signal']: 
