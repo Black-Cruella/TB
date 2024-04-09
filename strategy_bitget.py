@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long']:
+    if row['close_long'] or row['close_signal']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short']:
+    if row['close_short'] or row['close_signal']:
         return True
     else:
         return False
@@ -162,6 +162,13 @@ def calculate_signal(row):
     if row['position'] != prev_position:  # Si la position actuelle est différente de la position précédente
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
+
+    elif row['position'] == 'long' and row['buy_signal'] and not row['buy_signal'].shift(1):  
+        return 'GO'  # Retourner 'GO'
+
+    elif row['position'] == 'short' and row['sell_signal'] and not row['sell_signal'].shift(1):  
+        return 'GO'  # Retourner 'GO'
+    
     else:
         return 'WAIT'  # Sinon, retourner 'WAIT'
         
