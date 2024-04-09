@@ -72,8 +72,8 @@ superTrend1 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_lengt
 df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-ST_length = 10
-ST_multiplier = 2.5
+ST_length = 30
+ST_multiplier = 3
 superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
@@ -164,6 +164,7 @@ def calculate_signal(row):
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
     else:
         return 'WAIT'  # Sinon, retourner 'WAIT'
+        
 df['signal'] = df.apply(calculate_signal, axis=1)
 
 usd_balance = float(bitget.get_usdt_equity())
@@ -173,6 +174,44 @@ positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
+
+# Ajouter la position
+if len(positions_data) == 0:
+    df['side'] = None
+else :
+    current_position = positions_data[0]
+    side = current_position['side']
+    df['side'] = side
+
+# Ajouter le Open Price
+if len(positions_data) == 0:
+    df['entry_price'] = None
+else:
+    position_info = positions_data[0]
+    entry_price = position_info['entryPrice']
+    df['entry_price'] = entry_price
+
+percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
+df['0.2_P'] = (percentage_difference > 0.2).astype(int)
+df.loc[df['side'] == 'short', '0.2_P'] = (percentage_difference < -0.2).astype(int)
+df['0.3_P'] = (percentage_difference > 0.3).astype(int)
+df.loc[df['side'] == 'short', '0.3_P'] = (percentage_difference < -0.3).astype(int)
+df['0.4_P'] = (percentage_difference > 0.4).astype(int)
+df.loc[df['side'] == 'short', '0.4_P'] = (percentage_difference < -0.4).astype(int)
+df['0.5_P'] = (percentage_difference > 0.5).astype(int)
+df.loc[df['side'] == 'short', '0.5_P'] = (percentage_difference < -0.5).astype(int)
+df['0.6_P'] = (percentage_difference > 0.6).astype(int)
+df.loc[df['side'] == 'short', '0.6_P'] = (percentage_difference < -0.6).astype(int)
+df['0.7_P'] = (percentage_difference > 0.7).astype(int)
+df.loc[df['side'] == 'short', '0.7_P'] = (percentage_difference < -0.7).astype(int)
+df['0.8_P'] = (percentage_difference > 0.8).astype(int)
+df.loc[df['side'] == 'short', '0.8_P'] = (percentage_difference < -0.8).astype(int)
+df['0.9_P'] = (percentage_difference > 0.9).astype(int)
+df.loc[df['side'] == 'short', '0.9_P'] = (percentage_difference < -0.9).astype(int)
+df['1_P'] = (percentage_difference > 1).astype(int)
+df.loc[df['side'] == 'short', '1_P'] = (percentage_difference < -1).astype(int)
+df['TOTAL_P'] = df[['0.2_P', '0.3_P', '0.4_P', '0.5_P', '0.6_P', '0.7_P', '0.8_P', '0.9_P', '1_P']].sum(axis=1)
+df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
 
 row = df.iloc[-2]
 
