@@ -194,7 +194,7 @@ else :
 
 # Ajouter le Open Price
 if len(positions_data) == 0:
-    df['entry_price'] = None
+    df['entry_price'] = 0
 else:
     position_info = positions_data[0]
     entry_price = position_info['entryPrice']
