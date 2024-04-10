@@ -130,35 +130,14 @@ def MACD_direction(macd_values):
             macd_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
     return macd_direction
 
-positions_data = bitget.get_open_position()
-position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
-    for d in positions_data if d["symbol"] == pair]
-
-# Ajouter la position
-if len(positions_data) == 0:
-    df['side'] = None
-else :
-    current_position = positions_data[0]
-    side = current_position['side']
-    df['side'] = side
-
-# Ajouter le Open Price
-if len(positions_data) == 0:
-    df['entry_price'] = None
-else:
-    position_info = positions_data[0]
-    entry_price = position_info['entryPrice']
-    df['entry_price'] = entry_price
-
 df['MACD_direction'] = MACD_direction(macd)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
-df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
+
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
-df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
+
 
 df['prev_buy_signal'] = df['buy_signal'].shift(1)
 df['prev_sell_signal'] = df['sell_signal'].shift(1)
@@ -200,6 +179,27 @@ def calculate_signal(row):
         
 df['signal'] = df.apply(calculate_signal, axis=1)
 
+positions_data = bitget.get_open_position()
+position = [
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
+    for d in positions_data if d["symbol"] == pair]
+
+# Ajouter la position
+if len(positions_data) == 0:
+    df['side'] = None
+else :
+    current_position = positions_data[0]
+    side = current_position['side']
+    df['side'] = side
+
+# Ajouter le Open Price
+if len(positions_data) == 0:
+    df['entry_price'] = None
+else:
+    position_info = positions_data[0]
+    entry_price = position_info['entryPrice']
+    df['entry_price'] = entry_price
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
@@ -224,6 +224,9 @@ df['1_P'] = (percentage_difference > 1).astype(int)
 df.loc[df['side'] == 'short', '1_P'] = (percentage_difference < -1).astype(int)
 df['TOTAL_P'] = df[['0.2_P', '0.3_P', '0.4_P', '0.5_P', '0.6_P', '0.7_P', '0.8_P', '0.9_P', '1_P']].sum(axis=1)
 df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
+
+df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
+df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
 
 row = df.iloc[-2]
 
