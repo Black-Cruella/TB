@@ -139,6 +139,7 @@ df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] 
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
 
 df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
+df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
 
 position = None  # Initialiser la position à None
 def calculate_position(row):
@@ -166,10 +167,12 @@ def calculate_signal(row):
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
 
-    elif row['position'] == 'long' and row['buy_signal'] and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1:
-        return 'GO'  # Retourner 'GO'
+    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
+        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
+        return 'GO'
 
-    elif row['position'] == 'short' and row['sell_signal'] and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1: 
+    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
+        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1): 
         return 'GO'  # Retourner 'GO'
     
     else:
