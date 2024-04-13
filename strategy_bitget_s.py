@@ -3,7 +3,7 @@ sys.path.append("./TBWOTP")
 import ccxt
 import ta
 import pandas as pd
-import pandas_ta as pda
+import pandas_ta as pda 
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
@@ -24,7 +24,7 @@ account_to_select = "bitget_exemple"
 production = True
 
 pair = "AVAX/USDT:USDT"
-timeframe = "5m"
+timeframe = "1m"
 leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
@@ -32,28 +32,29 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['buy_signal'] or row['buy_signal2']:
+    if row['sell_signal'] and row['signal'] == 'GO':
         return True
     else:
         return False
 
 def close_long(row):
-    if row['close_long']:
+    if row['close_short'] or row['close_signal'] or row['SL_long']:
         return True
     else:
         return False
 
 def open_short(row):
-    if row['sell_signal'] or row['sell_signal2']:
+    if row['buy_signal'] and row['signal'] == 'GO':
         return True
     else:
         return False
 
 def close_short(row):
-    if row['close_short']:
+    if row['close_long'] or row['close_signal'] or row['SL_short']:
         return True
     else:
         return False
+
 
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
@@ -71,8 +72,8 @@ superTrend1 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_lengt
 df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-ST_length = 10
-ST_multiplier = 3.5
+ST_length = 30
+ST_multiplier = 3.0
 superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
@@ -99,29 +100,134 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
-def detecter_couleur_bougie(row):
-    if row['close'] < row['open']:
-        return 'Rouge'
-    elif row['close'] > row['open']:
-        return 'Verte'
+def calculate_macd(df, short_window=12, long_window=26, signal_window=9):
+    # Calculer les moyennes mobiles exponentielles (EMA)
+    short_ema = df['close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
+    long_ema = df['close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
+    
+    # Calculer la différence entre les deux EMA pour obtenir le MACD
+    macd = short_ema - long_ema
+    
+    # Calculer la ligne de signal (EMA du MACD)
+    signal_line = macd.ewm(span=signal_window, min_periods=1, adjust=False).mean()
+    
+    # Calculer l'histogramme MACD (différence entre le MACD et sa ligne de signal)
+    macd_histogram = macd - signal_line
+    
+    return macd, signal_line, macd_histogram
+
+macd, _, _ = calculate_macd(df)
+df['MACD'] = macd
+
+def MACD_direction(macd_values):
+    macd_direction = [0]  # Initialise la liste de direction de EMA avec une valeur arbitraire, car la première direction n'est pas définie
+    for i in range(1, len(macd_values)):
+        if macd_values[i] > macd_values[i-1]:
+            macd_direction.append(1)
+        elif macd_values[i] < macd_values[i-1]:
+            macd_direction.append(-1)
+        else:
+            macd_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
+    return macd_direction
+
+df['MACD_direction'] = MACD_direction(macd)
+
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
+df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
+
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
+df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
+
+df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
+df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
+
+position = None  # Initialiser la position à None
+def calculate_position(row):
+    global position  # Utiliser la variable de position globale
+
+    if row['sell_signal']:  # Si le sell signal est déclenché
+        position = 'short'  # Changer la position à short
+        return position
+
+    elif row['buy_signal']:  # Si le buy signal est déclenché
+        if position == 'short':  # Si la position précédente était short
+            position = 'long'  # Changer la position à long
+        return position
+
     else:
-        return 'Neutre'
-df['couleur_bougie'] = df.apply(detecter_couleur_bougie, axis=1)
+        return position  # Retourner la position actuelle
+df['position'] = df.apply(calculate_position, axis=1)
 
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
-df['sell_signal2'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['couleur_bougie'] == 'Rouge') & (df['couleur_bougie'].shift(1) == 'Verte')
-df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1)
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1)
-df['buy_signal2'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['couleur_bougie'] == 'Verte') & (df['couleur_bougie'].shift(1) == 'Rouge')
-df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
 
-usd_balance = float(bitget.get_usdt_equity())
-print("USD balance :", round(usd_balance, 2), "$")
+prev_position = None  # Initialiser la position précédente à None
+def calculate_signal(row):
+    global prev_position  # Utiliser la variable de position précédente globale
+
+    if row['position'] != prev_position:  # Si la position actuelle est différente de la position précédente
+        prev_position = row['position']  # Mettre à jour la position précédente
+        return 'GO'  # Retourner 'GO' pour indiquer un changement de position
+
+    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
+        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
+        return 'GO'
+
+    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
+        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1)): 
+        return 'GO'  # Retourner 'GO'
+    
+    else:
+        return 'WAIT'  # Sinon, retourner 'WAIT'
+        
+df['signal'] = df.apply(calculate_signal, axis=1)
 
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
+
+# Ajouter la position
+if len(positions_data) == 0:
+    df['side'] = None
+else :
+    current_position = positions_data[0]
+    side = current_position['side']
+    df['side'] = side
+
+# Ajouter le Open Price
+if len(positions_data) == 0:
+    df['entry_price'] = 0
+else:
+    position_info = positions_data[0]
+    entry_price = position_info['entryPrice']
+    df['entry_price'] = entry_price
+
+usd_balance = float(bitget.get_usdt_equity())
+print("USD balance :", round(usd_balance, 2), "$")
+
+percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
+df['0.2_P'] = (percentage_difference > 0.2).astype(int)
+df.loc[df['side'] == 'long', '0.2_P'] = (percentage_difference < -0.2).astype(int)
+df['0.3_P'] = (percentage_difference > 0.3).astype(int)
+df.loc[df['side'] == 'long', '0.3_P'] = (percentage_difference < -0.3).astype(int)
+df['0.4_P'] = (percentage_difference > 0.4).astype(int)
+df.loc[df['side'] == 'long', '0.4_P'] = (percentage_difference < -0.4).astype(int)
+df['0.5_P'] = (percentage_difference > 0.5).astype(int)
+df.loc[df['side'] == 'long', '0.5_P'] = (percentage_difference < -0.5).astype(int)
+df['0.6_P'] = (percentage_difference > 0.6).astype(int)
+df.loc[df['side'] == 'long', '0.6_P'] = (percentage_difference < -0.6).astype(int)
+df['0.7_P'] = (percentage_difference > 0.7).astype(int)
+df.loc[df['side'] == 'long', '0.7_P'] = (percentage_difference < -0.7).astype(int)
+df['0.8_P'] = (percentage_difference > 0.8).astype(int)
+df.loc[df['side'] == 'long', '0.8_P'] = (percentage_difference < -0.8).astype(int)
+df['0.9_P'] = (percentage_difference > 0.9).astype(int)
+df.loc[df['side'] == 'long', '0.9_P'] = (percentage_difference < -0.9).astype(int)
+df['1_P'] = (percentage_difference > 1).astype(int)
+df.loc[df['side'] == 'long', '1_P'] = (percentage_difference < -1).astype(int)
+df['TOTAL_P'] = df[['0.2_P', '0.3_P', '0.4_P', '0.5_P', '0.6_P', '0.7_P', '0.8_P', '0.9_P', '1_P']].sum(axis=1)
+df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
+
+df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
+df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
 
 row = df.iloc[-2]
 
@@ -142,7 +248,7 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-
+           
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
@@ -154,8 +260,8 @@ if len(position) > 0:
         )
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-
-
+        
+        
 
 else:
     print("No active position")
@@ -171,10 +277,10 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        if production:
-            stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
-            print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
+        #if production:
+        #    stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
+        #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
+        #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
     elif open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
@@ -188,14 +294,12 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        if production:
-            stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
-            print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-            bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+        #if production:
+        #    stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
+        #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+        #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- End Execution Time :", current_time, "---")
-
-
 
