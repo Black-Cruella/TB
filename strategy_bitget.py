@@ -4,7 +4,6 @@ import ccxt
 import ta
 import pandas as pd
 import pandas_ta as pda 
-from pandas_ta import bollinger
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
@@ -83,9 +82,10 @@ BB_length = 10
 BB_multiplier = 1.8
 bollinger_bands = bollinger(df['close'], length=BB_length, std=BB_multiplier)
 
-# Ajouter les colonnes des bandes de Bollinger supérieure et inférieure à votre DataFrame
-df['BB_UPPER'] = bollinger_bands['BBL_' + str(BB_length) + "_" + str(BB_multiplier)]
-df['BB_LOWER'] = bollinger_bands['BBM_' + str(BB_length) + "_" + str(BB_multiplier)]
+sma = df['close'].rolling(window=BB_length).mean()
+std_dev = df['close'].rolling(window=BB_length).std()
+df['BB_UPPER'] = sma + BB_multiplier * std_dev
+df['BB_LOWER'] = sma - BB_multiplier * std_dev
 
 def calculate_ema5(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
