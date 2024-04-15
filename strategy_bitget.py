@@ -4,6 +4,7 @@ import ccxt
 import ta
 import pandas as pd
 import pandas_ta as pda 
+from pandas_ta import bollinger
 from perp_bitget import PerpBitget
 from custom_indicators import get_n_columns
 from datetime import datetime
@@ -77,6 +78,14 @@ ST_multiplier = 3.0
 superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+
+BB_length = 10
+BB_multiplier = 1.8
+bollinger_bands = bollinger(df['close'], length=BB_length, std=BB_multiplier)
+
+# Ajouter les colonnes des bandes de Bollinger supérieure et inférieure à votre DataFrame
+df['BB_UPPER'] = bollinger_bands['BBL_' + str(BB_length) + "_" + str(BB_multiplier)]
+df['BB_LOWER'] = bollinger_bands['BBM_' + str(BB_length) + "_" + str(BB_multiplier)]
 
 def calculate_ema5(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
