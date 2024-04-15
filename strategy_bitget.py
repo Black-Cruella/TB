@@ -80,7 +80,6 @@ df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_
 
 BB_length = 10
 BB_multiplier = 1.8
-bollinger_bands = bollinger(df['close'], length=BB_length, std=BB_multiplier)
 
 sma = df['close'].rolling(window=BB_length).mean()
 std_dev = df['close'].rolling(window=BB_length).std()
