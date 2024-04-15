@@ -175,12 +175,12 @@ def calculate_signal(row):
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
 
-    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
-        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
+    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER']) or
+        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER'])):
         return 'GO'
 
-    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
-        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1)): 
+    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER']) or 
+        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER'])): 
         return 'GO'  # Retourner 'GO'
     
     else:
