@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long'] or row['close_signal'] or row['SL_long']:
+    if row['close_long'] or row['SL_long']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short'] or row['close_signal'] or row['SL_short']:
+    if row['close_short'] or row['SL_short']:
         return True
     else:
         return False
@@ -203,28 +203,6 @@ else:
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
-
-percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
-df['0.2_P'] = (percentage_difference > 0.2).astype(int)
-df.loc[df['side'] == 'short', '0.2_P'] = (percentage_difference < -0.2).astype(int)
-df['0.3_P'] = (percentage_difference > 0.3).astype(int)
-df.loc[df['side'] == 'short', '0.3_P'] = (percentage_difference < -0.3).astype(int)
-df['0.4_P'] = (percentage_difference > 0.4).astype(int)
-df.loc[df['side'] == 'short', '0.4_P'] = (percentage_difference < -0.4).astype(int)
-df['0.5_P'] = (percentage_difference > 0.5).astype(int)
-df.loc[df['side'] == 'short', '0.5_P'] = (percentage_difference < -0.5).astype(int)
-df['0.6_P'] = (percentage_difference > 0.6).astype(int)
-df.loc[df['side'] == 'short', '0.6_P'] = (percentage_difference < -0.6).astype(int)
-df['0.7_P'] = (percentage_difference > 0.7).astype(int)
-df.loc[df['side'] == 'short', '0.7_P'] = (percentage_difference < -0.7).astype(int)
-df['0.8_P'] = (percentage_difference > 0.8).astype(int)
-df.loc[df['side'] == 'short', '0.8_P'] = (percentage_difference < -0.8).astype(int)
-df['0.9_P'] = (percentage_difference > 0.9).astype(int)
-df.loc[df['side'] == 'short', '0.9_P'] = (percentage_difference < -0.9).astype(int)
-df['1_P'] = (percentage_difference > 1).astype(int)
-df.loc[df['side'] == 'short', '1_P'] = (percentage_difference < -1).astype(int)
-df['TOTAL_P'] = df[['0.2_P', '0.3_P', '0.4_P', '0.5_P', '0.6_P', '0.7_P', '0.8_P', '0.9_P', '1_P']].sum(axis=1)
-df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
 
 df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
 df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
