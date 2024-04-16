@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long'] or row['SL_long']:
+    if row['close_long']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short'] or row['SL_short']:
+    if row['close_short']:
         return True
     else:
         return False
@@ -211,9 +211,6 @@ else:
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
-
-df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
-df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
 
 row = df.iloc[-2]
 
