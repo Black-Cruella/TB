@@ -85,6 +85,8 @@ sma = df['close'].rolling(window=BB_length).mean()
 std_dev = df['close'].rolling(window=BB_length).std()
 df['BB_UPPER'] = sma + BB_multiplier * std_dev
 df['BB_LOWER'] = sma - BB_multiplier * std_dev
+sma_direction = sma.diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+df['BBMA_direction'] = sma_direction
 
 def calculate_ema5(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
