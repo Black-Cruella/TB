@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long']:
+    if row['close_long'] or row['close_long2']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short']:
+    if row['close_short'] or row['close_short2']:
         return True
     else:
         return False
@@ -144,9 +144,11 @@ df['MACD_direction'] = MACD_direction(macd)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
+df['close_long2'] = (df['BBMA_direction'] == -1)
 
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
+df['close_short2'] = (df['BBMA_direction'] == 1)
 
 df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
 df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
