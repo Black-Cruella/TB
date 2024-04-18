@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./TBWOTP")
+sys.path.append("./TB")
 import ccxt
 import ta
 import pandas as pd
@@ -15,7 +15,7 @@ current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- Start Execution Time :", current_time, "---")
 
 f = open(
-    "./TBWOTP/secret.json",
+    "./TB/secret.json",
 )
 secret = json.load(f)
 f.close()
@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_short'] or row['close_signal'] or row['SL_short']:
+    if row['close_short'] or row['close_short2'] or row['STOP LOSS']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_long'] or row['close_signal'] or row['SL_long']:
+    if row['close_long'] or row['close_long2'] or row['STOP LOSS']:
         return True
     else:
         return False
@@ -77,6 +77,16 @@ ST_multiplier = 3.0
 superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+
+BB_length = 10
+BB_multiplier = 1.8
+
+sma = df['close'].rolling(window=BB_length).mean()
+std_dev = df['close'].rolling(window=BB_length).std()
+df['BB_UPPER'] = sma + BB_multiplier * std_dev
+df['BB_LOWER'] = sma - BB_multiplier * std_dev
+sma_direction = sma.diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+df['BBMA_direction'] = sma_direction
 
 def calculate_ema5(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
@@ -134,9 +144,11 @@ df['MACD_direction'] = MACD_direction(macd)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
+df['close_long2'] = (df['BBMA_direction'] == -1)
 
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
+df['close_short2'] = (df['BBMA_direction'] == 1)
 
 df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
 df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
@@ -167,12 +179,12 @@ def calculate_signal(row):
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
 
-    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
-        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
+    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER']) or
+        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER'])):
         return 'GO'
 
-    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
-        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1)): 
+    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER']) or 
+        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER'])): 
         return 'GO'  # Retourner 'GO'
     
     else:
@@ -201,33 +213,14 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
+percentage_difference = ((df['EMA_2'] - df['entry_price']) / df['entry_price']) * 100
+df['1_SL'] = (percentage_difference < -1.0).astype(int)
+df.loc[df['side'] == 'short', '1_SL'] = (percentage_difference > 1.0).astype(int)
+df['STOP LOSS'] = df['1_SL'] == 1
+
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
-
-percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
-df['0.2_P'] = (percentage_difference > 0.2).astype(int)
-df.loc[df['side'] == 'long', '0.2_P'] = (percentage_difference < -0.2).astype(int)
-df['0.3_P'] = (percentage_difference > 0.3).astype(int)
-df.loc[df['side'] == 'long', '0.3_P'] = (percentage_difference < -0.3).astype(int)
-df['0.4_P'] = (percentage_difference > 0.4).astype(int)
-df.loc[df['side'] == 'long', '0.4_P'] = (percentage_difference < -0.4).astype(int)
-df['0.5_P'] = (percentage_difference > 0.5).astype(int)
-df.loc[df['side'] == 'long', '0.5_P'] = (percentage_difference < -0.5).astype(int)
-df['0.6_P'] = (percentage_difference > 0.6).astype(int)
-df.loc[df['side'] == 'long', '0.6_P'] = (percentage_difference < -0.6).astype(int)
-df['0.7_P'] = (percentage_difference > 0.7).astype(int)
-df.loc[df['side'] == 'long', '0.7_P'] = (percentage_difference < -0.7).astype(int)
-df['0.8_P'] = (percentage_difference > 0.8).astype(int)
-df.loc[df['side'] == 'long', '0.8_P'] = (percentage_difference < -0.8).astype(int)
-df['0.9_P'] = (percentage_difference > 0.9).astype(int)
-df.loc[df['side'] == 'long', '0.9_P'] = (percentage_difference < -0.9).astype(int)
-df['1_P'] = (percentage_difference > 1).astype(int)
-df.loc[df['side'] == 'long', '1_P'] = (percentage_difference < -1).astype(int)
-df['TOTAL_P'] = df[['0.2_P', '0.3_P', '0.4_P', '0.5_P', '0.6_P', '0.7_P', '0.8_P', '0.9_P', '1_P']].sum(axis=1)
-df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
-
-df['SL_long'] = (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1) & (df['close'] < df['entry_price'])
-df['SL_short'] = (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1) & (df['close'] > df['entry_price'])
 
 row = df.iloc[-2]
 
@@ -302,4 +295,3 @@ else:
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- End Execution Time :", current_time, "---")
-
