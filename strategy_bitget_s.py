@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./TB")
+sys.path.append("./TBWOTP")
 import ccxt
 import ta
 import pandas as pd
@@ -15,7 +15,7 @@ current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 print("--- Start Execution Time :", current_time, "---")
 
 f = open(
-    "./TB/secret.json",
+    "./TBWOTP/secret.json",
 )
 secret = json.load(f)
 f.close()
