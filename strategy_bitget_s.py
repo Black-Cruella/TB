@@ -213,7 +213,7 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-percentage_difference = ((df['EMA_2'] - df['entry_price']) / df['entry_price']) * 100
+percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
 df['1_SL'] = (percentage_difference < -1.0).astype(int)
 df.loc[df['side'] == 'short', '1_SL'] = (percentage_difference > 1.0).astype(int)
 df['STOP LOSS'] = df['1_SL'] == 1
