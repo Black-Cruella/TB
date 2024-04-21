@@ -137,8 +137,58 @@ def MACD_direction(macd_values):
         else:
             macd_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
     return macd_direction
-
 df['MACD_direction'] = MACD_direction(macd)
+
+def calculate_zigzag(series, deviation, depth):
+    import numpy as np
+    turning_points = []
+    last_peak = series[0]
+    last_trough = series[0]
+    last_extreme_index = 0
+    direction = 0  # +1 for upward, -1 for downward
+
+    for i in range(1, len(series)):
+        if direction == 0:  # Initialize the direction
+            if series[i] > series[last_extreme_index] + deviation:
+                direction = 1
+                last_peak = series[i]
+                last_extreme_index = i
+            elif series[i] < series[last_extreme_index] - deviation:
+                direction = -1
+                last_trough = series[i]
+                last_extreme_index = i
+        elif direction == 1:
+            if series[i] > last_peak:
+                last_peak = series[i]
+                last_extreme_index = i
+            elif series[i] < last_peak - deviation:
+                if i - last_extreme_index >= depth:
+                    turning_points.append((last_extreme_index, last_peak))
+                direction = -1
+                last_trough = series[i]
+                last_extreme_index = i
+        elif direction == -1:
+            if series[i] < last_trough:
+                last_trough = series[i]
+                last_extreme_index = i
+            elif series[i] > last_trough + deviation:
+                if i - last_extreme_index >= depth:
+                    turning_points.append((last_extreme_index, last_trough))
+                direction = 1
+                last_peak = series[i]
+                last_extreme_index = i
+
+    # Option to include the last point as a turning point
+    if len(turning_points) == 0 or turning_points[-1][0] != last_extreme_index:
+        turning_points.append((last_extreme_index, series[last_extreme_index]))
+
+    return pd.DataFrame(turning_points, columns=['Index', 'Price'])
+
+# Apply the ZigZag calculation
+deviation = 0.02 * df['close'].mean()  # 2% of the average close price as deviation
+depth = 5  # at least 5 bars
+zigzag = calculate_zigzag(df['close'], deviation, depth)
+df = df.join(zigzag.set_index('Index'), on=df.index)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
