@@ -194,9 +194,11 @@ zigzag.set_index('Index', inplace=True)
 zigzag.index = pd.to_datetime(zigzag.index, unit='ms')  # Convert to datetime64[ns] if your df.index is datetime
 
 # Add Price column from zigzag to df using loc (this avoids issues with different index types)
-df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
 print(zigzag.index)
 print(df.index)
+
+df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
+
 
 # Now you can use 'Zigzag_Price' in your trading logic:
 df['zigzag_signal'] = df['Zigzag_Price'].apply(lambda x: 'buy' if x == df['close'].iloc[-1] else 'sell' if x == df['close'].iloc[-1] else None)
