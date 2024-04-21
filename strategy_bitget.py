@@ -191,6 +191,9 @@ zigzag = calculate_zigzag(df['close'], deviation, depth)
 
 # Since 'Index' in zigzag DataFrame is originally from df's index, convert it back to the original index type if necessary
 zigzag.set_index('Index', inplace=True)
+
+print("Indices avant conversion:", zigzag.index)
+
 zigzag.index = pd.to_datetime(zigzag.index, unit='ms')  # Convert to datetime64[ns] if your df.index is datetime
 
 # Add Price column from zigzag to df using loc (this avoids issues with different index types)
