@@ -144,24 +144,35 @@ def calculate_zigzag(prices, deviation_percentage, depth):
     turning_points = []
     last_pivot = prices.iloc[0]
     direction = 0
+    last_pivot_index = 0  # Store the index of the last pivot
+
     for i in range(1, len(prices)):
         if direction == 0:  # Determine the initial direction
             if prices.iloc[i] > last_pivot * (1 + deviation):
                 direction = 1
+                last_pivot = prices.iloc[i]
+                last_pivot_index = i
             elif prices.iloc[i] < last_pivot * (1 - deviation):
                 direction = -1
+                last_pivot = prices.iloc[i]
+                last_pivot_index = i
         elif direction == 1 and prices.iloc[i] < last_pivot * (1 - deviation):
-            turning_points.append((i, prices.iloc[i]))
-            last_pivot = prices.iloc[i]
-            direction = -1
+            if i - last_pivot_index >= depth:  # Check depth requirement
+                turning_points.append((i, prices.iloc[i]))
+                last_pivot = prices.iloc[i]
+                last_pivot_index = i
+                direction = -1
         elif direction == -1 and prices.iloc[i] > last_pivot * (1 + deviation):
-            turning_points.append((i, prices.iloc[i]))
-            last_pivot = prices.iloc[i]
-            direction = 1
+            if i - last_pivot_index >= depth:  # Check depth requirement
+                turning_points.append((i, prices.iloc[i]))
+                last_pivot = prices.iloc[i]
+                last_pivot_index = i
+                direction = 1
 
     return pd.DataFrame(turning_points, columns=['Index', 'Price']).set_index('Index')
 
-zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 5% deviation and depth of 5
+# Usage example
+zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 2% deviation and depth of 5
 df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
