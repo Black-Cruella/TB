@@ -139,40 +139,30 @@ def MACD_direction(macd_values):
     return macd_direction
 df['MACD_direction'] = MACD_direction(macd)
 
-def calculate_zigzag(df, deviation, depth):
-    # Logique simplifiée pour trouver les points de pivot
+def calculate_zigzag(prices, deviation_percentage, depth):
+    deviation = deviation_percentage / 100 * prices.iloc[0]  # initial deviation based on the first price
     turning_points = []
-    last_extreme_value = df['close'].iloc[0]
-    last_extreme_index = df.index[0]
-    direction = 0  # +1 pour montée, -1 pour descente
-
-    for i in range(1, len(df)):
-        current_value = df['close'].iloc[i]
-        current_index = df.index[i]
-
-        if direction == 0:  # Determine initial direction
-            if current_value > last_extreme_value + deviation:
+    last_pivot = prices.iloc[0]
+    direction = 0
+    for i in range(1, len(prices)):
+        if direction == 0:  # Determine the initial direction
+            if prices.iloc[i] > last_pivot * (1 + deviation):
                 direction = 1
-            elif current_value < last_extreme_value - deviation:
+            elif prices.iloc[i] < last_pivot * (1 - deviation):
                 direction = -1
-        elif direction == 1 and current_value < last_extreme_value - deviation:
-            turning_points.append((last_extreme_index, last_extreme_value))
+        elif direction == 1 and prices.iloc[i] < last_pivot * (1 - deviation):
+            turning_points.append((i, prices.iloc[i]))
+            last_pivot = prices.iloc[i]
             direction = -1
-        elif direction == -1 and current_value > last_extreme_value + deviation:
-            turning_points.append((last_extreme_index, last_extreme_value))
+        elif direction == -1 and prices.iloc[i] > last_pivot * (1 + deviation):
+            turning_points.append((i, prices.iloc[i]))
+            last_pivot = prices.iloc[i]
             direction = 1
-
-        if direction != 0:
-            last_extreme_value = current_value
-            last_extreme_index = current_index
 
     return pd.DataFrame(turning_points, columns=['Index', 'Price']).set_index('Index')
 
-# Supposons des paramètres de déviation et de profondeur
-deviation = 0.02 * df['close'].mean()
-depth = 5
-zigzag = calculate_zigzag(df, deviation, depth)
-df['Zigzag_Price'] = zigzag['Price']
+zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 5% deviation and depth of 5
+df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
