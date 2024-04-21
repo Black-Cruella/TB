@@ -139,23 +139,24 @@ def MACD_direction(macd_values):
     return macd_direction
 df['MACD_direction'] = MACD_direction(macd)
 
+import numpy as np
 def pivot_points_high_low(df, left, right):
-    # Détection des pivot highs
-    highs = df['high'].rolling(window=left+right+1, center=True).max()
-    pivot_high = (df['high'] == highs) & (df['high'].shift(left) != highs)
+    # Calcul des potential pivots highs
+    highs = df['high'].rolling(window=left + right + 1, center=True).max()
+    pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
 
-    # Détection des pivot lows
-    lows = df['low'].rolling(window=left+right+1, center=True).min()
-    pivot_low = (df['low'] == lows) & (df['low'].shift(left) != lows)
+    # Calcul des potential pivots lows
+    lows = df['low'].rolling(window=left + right + 1, center=True).min()
+    pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-    return pivot_high, pivot_low
+    # Utiliser pivot_high_mask et pivot_low_mask pour insérer les valeurs des pivots
+    df['pivot_high_value'] = np.where(pivot_high_mask, df['high'], np.nan)
+    df['pivot_low_value'] = np.where(pivot_low_mask, df['low'], np.nan)
 
-pivot_highs, pivot_lows = pivot_points_high_low(df, left=10, right=10)
-df['pivot_high'] = pivot_highs
-df['pivot_low'] = pivot_lows
+    return df['pivot_high_value'], df['pivot_low_value']
 
-
-
+# Appliquer la fonction et ajouter les valeurs de pivots au DataFrame
+df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
