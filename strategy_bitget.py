@@ -139,47 +139,22 @@ def MACD_direction(macd_values):
     return macd_direction
 df['MACD_direction'] = MACD_direction(macd)
 
-def calculate_zigzag(prices, deviation_percentage, depth):
-    deviation = deviation_percentage / 100 * prices.iloc[0]  # initial deviation based on the first price
-    turning_points = []
-    last_pivot = prices.iloc[0]
-    direction = 0
-    last_pivot_index = 0  # Store the index of the last pivot
+def pivot_points_high_low(df, left, right):
+    # Détection des pivot highs
+    highs = df['high'].rolling(window=left+right+1, center=True).max()
+    pivot_high = (df['high'] == highs) & (df['high'].shift(left) != highs)
 
-    for i in range(1, len(prices)):
-        if direction == 0:  # Determine the initial direction
-            if prices.iloc[i] > last_pivot * (1 + deviation):
-                direction = 1
-                last_pivot = prices.iloc[i]
-                last_pivot_index = i
-            elif prices.iloc[i] < last_pivot * (1 - deviation):
-                direction = -1
-                last_pivot = prices.iloc[i]
-                last_pivot_index = i
-        elif direction == 1 and prices.iloc[i] < last_pivot * (1 - deviation):
-            if i - last_pivot_index >= depth:  # Check depth requirement
-                turning_points.append((i, prices.iloc[i]))
-                last_pivot = prices.iloc[i]
-                last_pivot_index = i
-                direction = -1
-        elif direction == -1 and prices.iloc[i] > last_pivot * (1 + deviation):
-            if i - last_pivot_index >= depth:  # Check depth requirement
-                turning_points.append((i, prices.iloc[i]))
-                last_pivot = prices.iloc[i]
-                last_pivot_index = i
-                direction = 1
+    # Détection des pivot lows
+    lows = df['low'].rolling(window=left+right+1, center=True).min()
+    pivot_low = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-    return pd.DataFrame(turning_points, columns=['Index', 'Price']).set_index('Index')
+    return pivot_high, pivot_low
 
-# Usage example
-zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 2% deviation and depth of 5
-df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
+pivot_highs, pivot_lows = pivot_points_high_low(df, left=10, right=10)
+df['pivot_high'] = pivot_highs
+df['pivot_low'] = pivot_lows
 
-if not zigzag.empty:
-    last_pivot = zigzag.iloc[-1]
-    print("Le dernier pivot est à l'index", last_pivot.name, "avec un prix de", last_pivot['Price'])
-else:
-    print("Aucun pivot trouvé.")
+
 
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
