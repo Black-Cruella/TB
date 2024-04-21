@@ -174,6 +174,9 @@ def calculate_zigzag(prices, deviation_percentage, depth):
 # Usage example
 zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 2% deviation and depth of 5
 df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
+print(df.index)
+print(zigzag.index)
+
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
