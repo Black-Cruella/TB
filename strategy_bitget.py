@@ -188,7 +188,16 @@ def calculate_zigzag(series, deviation, depth):
 deviation = 0.02 * df['close'].mean()  # 2% of the average close price as deviation
 depth = 5  # at least 5 bars
 zigzag = calculate_zigzag(df['close'], deviation, depth)
-df = df.join(zigzag.set_index('Index'), on=df.index)
+
+# Since 'Index' in zigzag DataFrame is originally from df's index, convert it back to the original index type if necessary
+zigzag.set_index('Index', inplace=True)
+zigzag.index = pd.to_datetime(zigzag.index, unit='ms')  # Convert to datetime64[ns] if your df.index is datetime
+
+# Add Price column from zigzag to df using loc (this avoids issues with different index types)
+df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
+
+# Now you can use 'Zigzag_Price' in your trading logic:
+df['zigzag_signal'] = df['Zigzag_Price'].apply(lambda x: 'buy' if x == df['close'].iloc[-1] else 'sell' if x == df['close'].iloc[-1] else None)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
