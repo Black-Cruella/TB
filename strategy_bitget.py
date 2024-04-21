@@ -174,8 +174,12 @@ def calculate_zigzag(prices, deviation_percentage, depth):
 # Usage example
 zigzag = calculate_zigzag(df['close'], 2.0, 5)  # Using 2% deviation and depth of 5
 df.loc[zigzag.index, 'Zigzag_Price'] = zigzag['Price']
-print(df.index)
-print(zigzag.index)
+
+if not zigzag.empty:
+    last_pivot = zigzag.iloc[-1]
+    print("Le dernier pivot est à l'index", last_pivot.name, "avec un prix de", last_pivot['Price'])
+else:
+    print("Aucun pivot trouvé.")
 
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
