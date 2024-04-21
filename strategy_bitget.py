@@ -157,6 +157,8 @@ def pivot_points_high_low(df, left, right):
 
 # Appliquer la fonction et ajouter les valeurs de pivots au DataFrame
 df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
+df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
+df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
