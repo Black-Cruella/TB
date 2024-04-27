@@ -148,7 +148,7 @@ def pivot_points_high_low(df, left, right):
     return df['pivot_high_value'], df['pivot_low_value']
 
 # Appliquer la fonction et ajouter les valeurs de pivots au DataFrame
-df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
+df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5)
 df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
 df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
 df['previous_pivot_low_value'] = df['pivot_low_value'].shift(1)
