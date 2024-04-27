@@ -132,13 +132,18 @@ df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
 df['previous_pivot_low_value'] = df['pivot_low_value'].shift(1)
 df['previous_pivot_low_value'] = df['previous_pivot_low_value'].where(df['pivot_low_value'] != df['previous_pivot_low_value'])
 df['previous_pivot_low_value'] = df['previous_pivot_low_value'].fillna(method='ffill')
+df['PL_direction'] = df.apply(
+    lambda row: 1 if row['pivot_low_value'] > row['previous_pivot_low_value'] else
+               (-1 if row['pivot_low_value'] < row['previous_pivot_low_value'] else 0),
+    axis=1
+)
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) 
-df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
+df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['PH_direction'] == -1) & (df['PL_direction'] == -1)
 
 
 df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
-df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
+df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['PH_direction'] == 1) & (df['PL_direction'] == 1)
 
 
 df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
