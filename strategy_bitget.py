@@ -122,7 +122,7 @@ df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
 df['previous_pivot_high_value'] = df['pivot_high_value'].shift(1)
 df['previous_pivot_high_value'] = df['previous_pivot_high_value'].where(df['pivot_high_value'] != df['previous_pivot_high_value'])
 df['previous_pivot_high_value'] = df['previous_pivot_high_value'].fillna(method='ffill')
-df['PH_direction'] =  = df.apply(
+df['PH_direction'] = df.apply(
     lambda row: 1 if row['pivot_high_value'] > row['previous_pivot_high_value'] else
                (-1 if row['pivot_high_value'] < row['previous_pivot_high_value'] else 0),
     axis=1
