@@ -32,7 +32,7 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['buy_signal'] and row['signal'] == 'GO':
+    if row['buy_signal']:
         return True
     else:
         return False
@@ -44,7 +44,7 @@ def close_long(row):
         return False
 
 def open_short(row):
-    if row['sell_signal'] and row['signal'] == 'GO':
+    if row['sell_signal']:
         return True
     else:
         return False
