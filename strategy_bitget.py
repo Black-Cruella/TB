@@ -151,6 +151,8 @@ def pivot_points_high_low(df, left, right):
 df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
 df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
 df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
+df['previous_pivot_low_value'] = df['pivot_low_value'].shift(1)
+df['previous_pivot_low_value'] = df['previous_pivot_low_value'].where(df['pivot_low_value'] != df['previous_pivot_low_value'])
 
 df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
