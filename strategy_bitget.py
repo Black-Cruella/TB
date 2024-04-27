@@ -209,6 +209,14 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
+df['STOP_LOSS'] = np.where(
+    (df['side'] == 'short') & (df['close'] > df['pivot_high_value']), True,
+    np.where(
+        (df['side'] == 'long') & (df['close'] < df['pivot_low_value']), True,
+        False  # Si aucune des conditions n'est remplie, marquer comme False
+    )
+)
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
