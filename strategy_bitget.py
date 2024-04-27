@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long']:
+    if row['close_long'] or row['STOP_LOSS']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short']:
+    if row['close_short'] or row['STOP_LOSS']:
         return True
     else:
         return False
