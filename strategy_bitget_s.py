@@ -32,25 +32,25 @@ print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 type = ["long", "short"]
 
 def open_long(row):
-    if row['sell_signal'] and row['signal'] == 'GO':
+    if row['buy_signal']:
         return True
     else:
         return False
 
 def close_long(row):
-    if row['close_short'] or row['STOP LOSS']:
+    if row['close_long'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
         return True
     else:
         return False
 
 def open_short(row):
-    if row['buy_signal'] and row['signal'] == 'GO':
+    if row['sell_signal']:
         return True
     else:
         return False
 
 def close_short(row):
-    if row['close_long'] or row['STOP LOSS']:
+    if row['close_short'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
         return True
     else:
         return False
@@ -78,14 +78,6 @@ superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_lengt
 df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
 df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
 
-BB_length = 10
-BB_multiplier = 1.8
-
-sma = df['close'].rolling(window=BB_length).mean()
-std_dev = df['close'].rolling(window=BB_length).std()
-df['BB_UPPER'] = sma + BB_multiplier * std_dev
-df['BB_LOWER'] = sma - BB_multiplier * std_dev
-
 def calculate_ema5(data, alpha):
     ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
     for i in range(1, len(data)):
@@ -108,43 +100,51 @@ def calculate_ema_direction(ema_values):
 
 df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
 
-def calculate_macd(df, short_window=12, long_window=26, signal_window=9):
-    # Calculer les moyennes mobiles exponentielles (EMA)
-    short_ema = df['close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
-    long_ema = df['close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
-    
-    # Calculer la différence entre les deux EMA pour obtenir le MACD
-    macd = short_ema - long_ema
-    
-    # Calculer la ligne de signal (EMA du MACD)
-    signal_line = macd.ewm(span=signal_window, min_periods=1, adjust=False).mean()
-    
-    # Calculer l'histogramme MACD (différence entre le MACD et sa ligne de signal)
-    macd_histogram = macd - signal_line
-    
-    return macd, signal_line, macd_histogram
+import numpy as np
+def pivot_points_high_low(df, left, right):
+    # Calcul des potential pivots highs
+    highs = df['high'].rolling(window=left + right + 1, center=True).max()
+    pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
 
-macd, _, _ = calculate_macd(df)
-df['MACD'] = macd
+    # Calcul des potential pivots lows
+    lows = df['low'].rolling(window=left + right + 1, center=True).min()
+    pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-def MACD_direction(macd_values):
-    macd_direction = [0]  # Initialise la liste de direction de EMA avec une valeur arbitraire, car la première direction n'est pas définie
-    for i in range(1, len(macd_values)):
-        if macd_values[i] > macd_values[i-1]:
-            macd_direction.append(1)
-        elif macd_values[i] < macd_values[i-1]:
-            macd_direction.append(-1)
-        else:
-            macd_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
-    return macd_direction
+    # Utiliser pivot_high_mask et pivot_low_mask pour insérer les valeurs des pivots
+    df['pivot_high_value'] = np.where(pivot_high_mask, df['high'], np.nan)
+    df['pivot_low_value'] = np.where(pivot_low_mask, df['low'], np.nan)
 
-df['MACD_direction'] = MACD_direction(macd)
+    return df['pivot_high_value'], df['pivot_low_value']
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) & (df['MACD_direction'] == 1)
-df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1)
+# Appliquer la fonction et ajouter les valeurs de pivots au DataFrame
+df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
+df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
+df['previous_pivot_high_value'] = df['pivot_high_value'].shift(1)
+df['previous_pivot_high_value'] = df['previous_pivot_high_value'].where(df['pivot_high_value'] != df['previous_pivot_high_value'])
+df['previous_pivot_high_value'] = df['previous_pivot_high_value'].fillna(method='ffill')
+df['PH_direction'] = df.apply(
+    lambda row: 1 if row['pivot_high_value'] > row['previous_pivot_high_value'] else
+               (-1 if row['pivot_high_value'] < row['previous_pivot_high_value'] else 0),
+    axis=1
+)
 
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1) & (df['MACD_direction'] == -1)
-df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1)
+df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
+df['previous_pivot_low_value'] = df['pivot_low_value'].shift(1)
+df['previous_pivot_low_value'] = df['previous_pivot_low_value'].where(df['pivot_low_value'] != df['previous_pivot_low_value'])
+df['previous_pivot_low_value'] = df['previous_pivot_low_value'].fillna(method='ffill')
+df['PL_direction'] = df.apply(
+    lambda row: 1 if row['pivot_low_value'] > row['previous_pivot_low_value'] else
+               (-1 if row['pivot_low_value'] < row['previous_pivot_low_value'] else 0),
+    axis=1
+)
+
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['EMA_direction'] == 1) 
+df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['PH_direction'] == -1) & (df['PL_direction'] == -1)
+
+
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['EMA_direction'] == -1)
+df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['PH_direction'] == 1) & (df['PL_direction'] == 1)
+
 
 df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
 df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
@@ -175,12 +175,12 @@ def calculate_signal(row):
         prev_position = row['position']  # Mettre à jour la position précédente
         return 'GO'  # Retourner 'GO' pour indiquer un changement de position
 
-    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER']) or
-        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1 and row['close'] > row['BB_UPPER'])):
+    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
+        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
         return 'GO'
 
-    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER']) or 
-        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1 and row['close'] < row['BB_LOWER'])): 
+    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
+        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1)): 
         return 'GO'  # Retourner 'GO'
     
     else:
@@ -209,11 +209,21 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
-df['1_SL'] = (percentage_difference < -1.0).astype(int)
-df.loc[df['side'] == 'short', '1_SL'] = (percentage_difference > 1.0).astype(int)
-df['STOP LOSS'] = df['1_SL'] == 1
+df['STOP_LOSS_2'] = np.where(
+    (df['side'] == 'short') & (df['entry_price'] * 1.01 < df['close']), True,
+    np.where(
+        (df['side'] == 'long') & (df['entry_price'] * 0.99 > df['close']), True,
+        False  # Si aucune des conditions n'est remplie, marquer comme False
+    )
+)
 
+df['STOP_LOSS'] = np.where(
+    (df['side'] == 'short') & (df['close'] > df['pivot_high_value']), True,
+    np.where(
+        (df['side'] == 'long') & (df['close'] < df['pivot_low_value']), True,
+        False  # Si aucune des conditions n'est remplie, marquer comme False
+    )
+)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
