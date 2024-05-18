@@ -225,11 +225,16 @@ df['STOP_LOSS'] = np.where(
     )
 )
 
-percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
-df['0_P'] = (percentage_difference > 0).astype(int)
-df.loc[df['side'] == 'short', '0_P'] = (percentage_difference < -0).astype(int)
-df['0.3_P'] = (percentage_difference > 0.3).astype(int)
-df.loc[df['side'] == 'short', '0.3_P'] = (percentage_difference < -0.3).astype(int)
+if df['entry_price'] = 0
+    df['0_P'] = 0
+    df['0.3_P'] = 0
+else : 
+    percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
+    df['0_P'] = (percentage_difference > 0).astype(int)
+    df.loc[df['side'] == 'short', '0_P'] = (percentage_difference < -0).astype(int)
+    df['0.3_P'] = (percentage_difference > 0.3).astype(int)
+    df.loc[df['side'] == 'short', '0.3_P'] = (percentage_difference < -0.3).astype(int)
+
 df['TOTAL_P'] = df[['0_P', '0.3_P']].sum(axis=1)
 df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
 
