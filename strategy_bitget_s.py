@@ -225,7 +225,7 @@ df['STOP_LOSS'] = np.where(
     )
 )
 
-if df['entry_price'] = 0
+if df['entry_price'] == 0
     df['0_P'] = 0
     df['0.3_P'] = 0
 else : 
