@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
+    if row['close_long'] or row['STOP_LOSS'] or row['STOP_LOSS_2'] or ['close_signal']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
+    if row['close_short'] or row['STOP_LOSS'] or row['STOP_LOSS_2'] or ['close_signal']:
         return True
     else:
         return False
@@ -224,6 +224,15 @@ df['STOP_LOSS'] = np.where(
         False  # Si aucune des conditions n'est remplie, marquer comme False
     )
 )
+
+percentage_difference = ((df['EMA_5'] - df['entry_price']) / df['entry_price']) * 100
+df['0_P'] = (percentage_difference > 0).astype(int)
+df.loc[df['side'] == 'short', '0_P'] = (percentage_difference < -0).astype(int)
+df['0.3_P'] = (percentage_difference > 0.3).astype(int)
+df.loc[df['side'] == 'short', '0.3_P'] = (percentage_difference < -0.3).astype(int)
+df['TOTAL_P'] = df[['0_P', '0.3_P']].sum(axis=1)
+df['close_signal'] = (df['TOTAL_P'].shift(1) > df['TOTAL_P'])
+
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
