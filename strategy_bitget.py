@@ -38,7 +38,7 @@ def open_long(row):
         return False
 
 def close_long(row):
-    if row['close_long'] or row['STOP_LOSS']:
+    if row['close_long'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
         return True
     else:
         return False
@@ -50,7 +50,7 @@ def open_short(row):
         return False
 
 def close_short(row):
-    if row['close_short'] or row['STOP_LOSS']:
+    if row['close_short'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
         return True
     else:
         return False
@@ -213,6 +213,14 @@ df['STOP_LOSS'] = np.where(
     (df['side'] == 'short') & (df['close'] > df['pivot_high_value']), True,
     np.where(
         (df['side'] == 'long') & (df['close'] < df['pivot_low_value']), True,
+        False  # Si aucune des conditions n'est remplie, marquer comme False
+    )
+)
+
+df['STOP_LOSS_2'] = np.where(
+    (df['side'] == 'short') & (df['entry_price'] * 1.01 < df['close']), True,
+    np.where(
+        (df['side'] == 'long') & (df['entry_price'] * 0.99 > df['close']), True,
         False  # Si aucune des conditions n'est remplie, marquer comme False
     )
 )
