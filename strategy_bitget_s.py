@@ -231,7 +231,6 @@ mask = df['entry_price'] != 0
 percentage_difference = ((df.loc[mask, 'EMA_5'] - df.loc[mask, 'entry_price']) / df.loc[mask, 'entry_price']) * 100
 df.loc[mask, '0_3_P'] = (percentage_difference > 0.3).astype(int)
 df.loc[mask & (df['side'] == 'short'), '0.3_P'] = (percentage_difference < -0.3).astype(int)
-df['TOTAL_P'] = df[['0_P', '0_3_P']].sum(axis=1)
 df['close_signal'] = (df['0_3_P'].shift(1) > df['0_3_P'])
 
 
