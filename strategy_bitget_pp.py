@@ -138,11 +138,11 @@ df['PL_direction'] = df.apply(
     axis=1
 )
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['SUPER_TREND_DIRECTION1'] == 1) 
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['SUPER_TREND_DIRECTION1'] == 1)  & (df['PL_direction'] == 1)
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['PH_direction'] == -1) & (df['PL_direction'] == -1)
 
 
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['SUPER_TREND_DIRECTION1'] == -1)
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['SUPER_TREND_DIRECTION1'] == -1) & (df['PH_direction'] == -1)
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['PH_direction'] == 1) & (df['PL_direction'] == 1)
 
 
