@@ -76,9 +76,10 @@ df['close_short_signal'] = df['close_short'].shift(1)
 df['close_long_signal'] = df['close_long'].shift(1)
 
 positions_data = bitget.get_open_position()
-position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
-    for d in positions_data if d["symbol"] == pair]
+positions = [
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price": d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
+    for d in positions_data if d["symbol"] == pair
+]
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
