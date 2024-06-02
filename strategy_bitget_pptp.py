@@ -88,70 +88,49 @@ row = df.iloc[-2]
 pd.set_option('display.max_columns', None)
 print(df.tail(5))
 
-if len(position) > 0:
-    position = position[0]
-    print(f"Current position : {position}")
+# Vérifier les positions actuelles pour fermeture
+for position in positions:
     if position["side"] == "long" and close_long(row):
         close_long_market_price = float(df.iloc[-1]["close"])
-        close_long_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
+        close_long_quantity = float(bitget.convert_amount_to_precision(pair, position["size"]))
         exchange_close_long_quantity = close_long_quantity * close_long_market_price
-        print(
-            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
-        )
+        print(f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$")
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-           
+
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
-        close_short_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
+        close_short_quantity = float(bitget.convert_amount_to_precision(pair, position["size"]))
         exchange_close_short_quantity = close_short_quantity * close_short_market_price
-        print(
-            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
-        )
+        print(f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$")
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-        
-        
 
-else:
-    print("No active position")
+# Compter le nombre de positions ouvertes
+num_positions_open = len(positions)
+
+# Vérifier les conditions pour ouvrir de nouvelles positions seulement s'il y a moins de 2 positions ouvertes
+if num_positions_open < 2:
     if open_long(row) and "long" in type:
         long_market_price = float(df.iloc[-1]["close"])
         long_quantity_in_usd = usd_balance * (leverage / 2)
-        long_quantity = float(bitget.convert_amount_to_precision(pair, float(
-            bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
-        )))
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price))))
         exchange_long_quantity = long_quantity * long_market_price
-        print(
-            f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$"
-        )
+        print(f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$")
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        #if production:
-        #    stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
-        #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
-    elif open_short(row) and "short" in type:
+    if open_short(row) and "short" in type:
         short_market_price = float(df.iloc[-1]["close"])
         short_quantity_in_usd = usd_balance * (leverage / 2)
-        short_quantity = float(bitget.convert_amount_to_precision(pair, float(
-            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
-        )))
+        short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price))))
         exchange_short_quantity = short_quantity * short_market_price
-        print(
-            f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$"
-        )
+        print(f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$")
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        #if production:
-        #    stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
-        #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+else:
+    print("Maximum number of open positions reached. No new positions will be opened.")
+
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
