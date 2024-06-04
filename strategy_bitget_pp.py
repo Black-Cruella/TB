@@ -20,6 +20,9 @@ f = open(
 secret = json.load(f)
 f.close()
 
+secret = json.load(f)
+f.close()
+
 account_to_select = "bitget_exemple"
 production = True
 
@@ -138,68 +141,17 @@ df['PL_direction'] = df.apply(
     axis=1
 )
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['SUPER_TREND_DIRECTION1'] == 1)  & (df['PL_direction'] == 1)
+df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['SUPER_TREND_DIRECTION1'] == 1) 
 df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['PH_direction'] == -1) & (df['PL_direction'] == -1)
 
 
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['SUPER_TREND_DIRECTION1'] == -1) & (df['PH_direction'] == -1)
+df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['SUPER_TREND_DIRECTION1'] == -1)
 df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['PH_direction'] == 1) & (df['PL_direction'] == 1)
-
-
-df['prev_ST1'] = df['SUPER_TREND_DIRECTION1'].shift(1)
-df['prev_ST1_2'] = df['SUPER_TREND_DIRECTION1'].shift(2)
-
-position = None  # Initialiser la position à None
-def calculate_position(row):
-    global position  # Utiliser la variable de position globale
-
-    if row['sell_signal']:  # Si le sell signal est déclenché
-        position = 'short'  # Changer la position à short
-        return position
-
-    elif row['buy_signal']:  # Si le buy signal est déclenché
-        if position == 'short':  # Si la position précédente était short
-            position = 'long'  # Changer la position à long
-        return position
-
-    else:
-        return position  # Retourner la position actuelle
-df['position'] = df.apply(calculate_position, axis=1)
-
-
-prev_position = None  # Initialiser la position précédente à None
-def calculate_signal(row):
-    global prev_position  # Utiliser la variable de position précédente globale
-
-    if row['position'] != prev_position:  # Si la position actuelle est différente de la position précédente
-        prev_position = row['position']  # Mettre à jour la position précédente
-        return 'GO'  # Retourner 'GO' pour indiquer un changement de position
-
-    elif ((row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == 1) or
-        (row['position'] == 'long' and row['buy_signal'] and row['prev_ST1_2'] == -1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == 1)):
-        return 'GO'
-
-    elif ((row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == 1 and row['SUPER_TREND_DIRECTION1'] == -1) or 
-        (row['position'] == 'short' and row['sell_signal'] and row['prev_ST1_2'] == 1 and row['prev_ST1'] == -1 and row['SUPER_TREND_DIRECTION1'] == -1)): 
-        return 'GO'  # Retourner 'GO'
-    
-    else:
-        return 'WAIT'  # Sinon, retourner 'WAIT'
-        
-df['signal'] = df.apply(calculate_signal, axis=1)
 
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
-
-# Ajouter la position
-if len(positions_data) == 0:
-    df['side'] = None
-else :
-    current_position = positions_data[0]
-    side = current_position['side']
-    df['side'] = side
 
 # Ajouter le Open Price
 if len(positions_data) == 0:
@@ -209,18 +161,18 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-df['STOP_LOSS_2'] = np.where(
-    (df['side'] == 'short') & (df['entry_price'] * 1.01 < df['close']), True,
-    np.where(
-        (df['side'] == 'long') & (df['entry_price'] * 0.99 > df['close']), True,
-        False  # Si aucune des conditions n'est remplie, marquer comme False
-    )
-)
-
 df['STOP_LOSS'] = np.where(
     (df['side'] == 'short') & (df['close'] > df['pivot_high_value']), True,
     np.where(
         (df['side'] == 'long') & (df['close'] < df['pivot_low_value']), True,
+        False  # Si aucune des conditions n'est remplie, marquer comme False
+    )
+)
+
+df['STOP_LOSS_2'] = np.where(
+    (df['side'] == 'short') & (df['entry_price'] * 1.01 < df['close']), True,
+    np.where(
+        (df['side'] == 'long') & (df['entry_price'] * 0.99 > df['close']), True,
         False  # Si aucune des conditions n'est remplie, marquer comme False
     )
 )
