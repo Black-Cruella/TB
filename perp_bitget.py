@@ -151,6 +151,24 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
+    def place_trailing_stop(self, symbol, side, amount, trigger_price):
+   
+        try:
+            return self._session.createOrder(
+                symbol, 
+                side, 
+                self.convert_amount_to_precision(symbol, amount), 
+                self.convert_price_to_precision(symbol, trigger_price),
+                params={
+                    'activationPrice': self.convert_price_to_precision(symbol, activation_price),  # Activation price
+                    'trailingOffset': self.convert_price_to_precision(symbol, trailing_offset),   # Trailing offset
+                }
+            )
+        except BaseException as err:
+            raise Exception(f"An error occurred while placing the trailing stop order: {err}")
+                
+
+    @authentication_required
     def get_balance_of_one_coin(self, coin):
         try:
             allBalance = self._session.fetchBalance()
@@ -245,16 +263,3 @@ class PerpBitget():
         except BaseException as err:
             raise Exception("An error occured in cancel_order_ids", err)
 
-    @authentication_required
-    def get_current_plan_orders(self, symbol=None, productType=None):
-        endpoint = "/api/mix/v1/plan/currentPlan"
-        params = {}
-        if symbol:
-            params["symbol"] = symbol
-        if productType:
-            params["productType"] = productType
-        try:
-            response = self._session.public_get(endpoint, params=params)
-            return response
-        except Exception as err:
-            raise Exception(f"Une erreur est survenue lors de la récupération des ordres planifiés TPSL: {err}")
