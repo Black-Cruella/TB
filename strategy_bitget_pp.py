@@ -20,9 +20,6 @@ f = open(
 secret = json.load(f)
 f.close()
 
-secret = json.load(f)
-f.close()
-
 account_to_select = "bitget_exemple"
 production = True
 
