@@ -181,6 +181,11 @@ df['STOP_LOSS_2'] = np.where(
     )
 )
 
+trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
+range_rate = 0.01  # 1% de suivi
+print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
+bitget.place_trailing_stop_order(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
+
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
