@@ -155,7 +155,7 @@ class PerpBitget():
    
         try:
             return self._session.createOrder(
-                'track_plan'
+                'track_plan',
                 symbol, 
                 'market'
                 side, 
