@@ -157,15 +157,15 @@ class PerpBitget():
             return self._session.createOrder(
                 'track_plan',
                 symbol, 
-                'market'
+                'market',
                 side, 
                 self.convert_amount_to_precision(symbol, amount),
                 self.convert_price_to_precision(symbol, trigger_price),
                 range_rate,
                 params={
-                    'triggerPrice': self.convert_price_to_precision(symbol, trigger_price),
+                    'trailingTriggerPrice': self.convert_price_to_precision(symbol, trigger_price),
                     "triggerType": "market_price",
-                    'rangeRate': range_rate,
+                    'trailingPercent': range_rate,
                     'reduceOnly': reduce
                 }
             )
