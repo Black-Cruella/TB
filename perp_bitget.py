@@ -151,7 +151,7 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trigger_price):
+    def place_trailing_stop(self, symbol, side, amount, trigger_price, range_rate, reduce=False):
    
         try:
             return self._session.createOrder(
@@ -159,9 +159,11 @@ class PerpBitget():
                 side, 
                 self.convert_amount_to_precision(symbol, amount), 
                 self.convert_price_to_precision(symbol, trigger_price),
+                range_rate,
                 params={
-                    'activationPrice': self.convert_price_to_precision(symbol, activation_price),  # Activation price
-                    'trailingOffset': self.convert_price_to_precision(symbol, trailing_offset),   # Trailing offset
+                    'triggerPrice': self.convert_price_to_precision(symbol, trigger_price),
+                    'rangeRate': range_rate,
+                    'reduceOnly': reduce
                 }
             )
         except BaseException as err:
