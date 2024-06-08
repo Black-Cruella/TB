@@ -181,6 +181,7 @@ df['STOP_LOSS_2'] = np.where(
     )
 )
 
+short_market_price = float(df.iloc[-1]["close"])
 trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
 range_rate = 0.01  # 1% de suivi
 print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
