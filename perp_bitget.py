@@ -151,7 +151,7 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
+    def place_trailing_stop2(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
         """
         Place a trailing stop order to close an existing position.
     
@@ -212,7 +212,23 @@ class PerpBitget():
         except Exception as err:
             raise Exception(f"An error occurred while placing the trailing stop order: {err}")
 
-                
+    @authentication_required
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
+          try:
+            return self._session.createOrder(
+                symbol, 
+                'market', 
+                side, 
+                self.convert_amount_to_precision(symbol, amount), 
+                self.convert_price_to_precision(symbol, trailingTriggerPrice),
+                params = {
+                    'trailingPercent': range_rate,  
+                    "triggerType": "market_price",
+                    "reduceOnly": reduce
+                }
+            )
+        except BaseException as err:
+            raise Exception(err)      
 
     @authentication_required
     def get_balance_of_one_coin(self, coin):
