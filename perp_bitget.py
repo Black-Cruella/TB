@@ -217,23 +217,20 @@ class PerpBitget():
         
         try:
             return self._session.createOrder(
-                'track_plan',
                 symbol, 
                 'market', 
                 side, 
                 self.convert_amount_to_precision(symbol, amount), 
                 self.convert_price_to_precision(symbol, trailingTriggerPrice),
-                "triggerType": "mark_price",
-                "reduceOnly": reduce
                 params = {
-                    'trailingPercent': range_rate,  
+                    'planType' : 'track_plan'
+                    'trailingPercent': range_rate, 
+                    "triggerType": "market_price",
+                    "reduceOnly": reduce
                 }
             )
 
-            print(f"Amount (precision): {amoun}")
-            print(f"Trailing Trigger Price (precision): {trailingTriggerPrice}")
-            print(f"Range Rate (precision): {range_rate}")
-    
+
         except BaseException as err:
             raise Exception(err)      
 
