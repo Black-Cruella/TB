@@ -156,15 +156,15 @@ class PerpBitget():
         try:
             return self._session.createOrder(
                 symbol, 
-                'market',
+                'market', 
                 side, 
-                self.convert_amount_to_precision(symbol, amount),
+                self.convert_amount_to_precision(symbol, amount), 
                 params={
-                    'planType': 'track_plan',
+                    "planType": "track_plan",
                     'TriggerPrice': self.convert_price_to_precision(symbol, trigger_price),
                     "triggerType": "market_price",
-                    'trailingPercent': range_rate,
-                    'reduceOnly': reduce
+                    "trailingPercent": range_rate,
+                    "reduceOnly": reduce
                 }
             )
         except BaseException as err:
