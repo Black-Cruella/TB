@@ -223,7 +223,7 @@ class PerpBitget():
                 self.convert_amount_to_precision(symbol, amount), 
                 self.convert_price_to_precision(symbol, trailingTriggerPrice),
                 params = {
-                    'planType' : 'track_plan'
+                    'planType' : 'track_plan',
                     'trailingPercent': range_rate, 
                     "triggerType": "market_price",
                     "reduceOnly": reduce
