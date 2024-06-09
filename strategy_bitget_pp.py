@@ -195,31 +195,26 @@ if len(position) > 0:
     if position["side"] == "long":
 
         long_market_price = float(df.iloc[-1]["close"])
-        #trailing_stop_price = long_market_price * 1.01  # 1% en-dessous du prix de vente
-        #range_rate = 0.01  # 1% de suivi
+        trailing_stop_price = long_market_price * 1.01  # 1% en-dessous du prix de vente
+        range_rate = 1  # 1% de suivi
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(
             bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
         )))
-        stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
-        print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-        bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
-        #print(f"Place Long Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
-        #bitget.place_trailing_stop(pair, 'sell', long_quantity, trailing_stop_price, range_rate, reduce=True)
+        print(f"Place Long Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
+        bitget.place_trailing_stop(pair, 'sell', long_quantity, trailing_stop_price, range_rate, reduce=True)
     
     elif position["side"] == "short":
+        
         short_market_price = float(df.iloc[-1]["close"])
-        #trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
-        #range_rate = 0.01  # 1% de suivi
+        trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
+        range_rate = 1  # 1% de suivi
         short_quantity_in_usd = usd_balance * leverage
         short_quantity = float(bitget.convert_amount_to_precision(pair, float(
             bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
         )))
-        stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
-        print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-        bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
-        #print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
-        #bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
+        print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
+        bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
 
     
     if position["side"] == "long" and close_long(row):
