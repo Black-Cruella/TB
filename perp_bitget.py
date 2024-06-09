@@ -223,10 +223,10 @@ class PerpBitget():
                 side, 
                 self.convert_amount_to_precision(symbol, amount), 
                 self.convert_price_to_precision(symbol, trailingTriggerPrice),
+                "triggerType": "mark_price",
+                "reduceOnly": reduce
                 params = {
                     'trailingPercent': range_rate,  
-                    "triggerType": "mark_price",
-                    "reduceOnly": reduce
                 }
             )
 
