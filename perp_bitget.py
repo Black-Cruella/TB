@@ -151,25 +151,50 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trigger_price, range_rate, reduce=False):
-   
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
+        """
+        Place a trailing stop order.
+    
+        :param str symbol: Trading pair symbol (e.g., 'BTC/USDT')
+        :param str side: Order side ('buy' or 'sell')
+        :param float amount: Amount to buy or sell
+        :param float trailingTriggerPrice: The price at which the trailing stop should be triggered
+        :param float range_rate: The trailing percentage
+        :param bool reduce: If the order should be reduce-only
+        :return: Response from the order placement API
+        :rtype: dict
+        """
         try:
+            # Convert amounts and prices to the appropriate precision
+            amount_precision = self.convert_amount_to_precision(symbol, amount)
+            trailing_trigger_price_precision = self.convert_price_to_precision(symbol, trailingTriggerPrice)
+            range_rate_precision = self.convert_price_to_precision(symbol, range_rate)
+    
+            # Log the converted values
+            print(f"Amount (precision): {amount_precision}")
+            print(f"Trailing Trigger Price (precision): {trailing_trigger_price_precision}")
+            print(f"Range Rate (precision): {range_rate_precision}")
+    
+            # Prepare the order parameters
+            params = {
+                'trailingTriggerPrice': trailing_trigger_price_precision,
+                'rangeRate': range_rate_precision,
+                'triggerType': 'market_price',
+                'reduceOnly': reduce
+            }
+    
+            # Log the params
+            print(f"Params: {params}")
+    
+            # Place the trailing stop order
             return self._session.createOrder(
-                symbol, 
-                'market', 
-                side, 
-                self.convert_amount_to_precision(symbol, amount), 
-                'track_plan'
-                self.convert_price_to_precision(symbol, trailingTriggerPrice),
-                range_rate,
-                params={
-                    'trailingTriggerPrice': self.convert_price_to_precision(symbol, trailingTriggerPrice),
-                    "triggerType": "market_price",
-                    "trailingPercent": range_rate,
-                    "reduceOnly": reduce
-                }
+                symbol=symbol,
+                type='market',
+                side=side,
+                amount=amount_precision,
+                params=params
             )
-        except BaseException as err:
+        except Exception as err:
             raise Exception(f"An error occurred while placing the trailing stop order: {err}")
                 
 
