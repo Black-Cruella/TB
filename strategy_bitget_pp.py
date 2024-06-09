@@ -203,18 +203,6 @@ if len(position) > 0:
         print(f"Place Long Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
         bitget.place_trailing_stop(pair, 'sell', long_quantity, trailing_stop_price, range_rate, reduce=True)
     
-    elif position["side"] == "long" and close_long(row):
-        close_long_market_price = float(df.iloc[-1]["close"])
-        close_long_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        exchange_close_long_quantity = close_long_quantity * close_long_market_price
-        print(
-            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-
     elif position["side"] == "short":
         short_market_price = float(df.iloc[-1]["close"])
         trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
@@ -225,6 +213,19 @@ if len(position) > 0:
         )))
         print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
         bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
+
+    
+    if position["side"] == "long" and close_long(row):
+        close_long_market_price = float(df.iloc[-1]["close"])
+        close_long_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
+        exchange_close_long_quantity = close_long_quantity * close_long_market_price
+        print(
+            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
            
     elif position["side"] == "short" and close_short(row):
         close_short_market_price = float(df.iloc[-1]["close"])
