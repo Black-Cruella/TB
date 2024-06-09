@@ -151,20 +151,26 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
         """
-        Place a trailing stop order.
+        Place a trailing stop order to close an existing position.
     
         :param str symbol: Trading pair symbol (e.g., 'BTC/USDT')
-        :param str side: Order side ('buy' or 'sell')
-        :param float amount: Amount to buy or sell
+        :param str side: Order side ('buy' to close a short, 'sell' to close a long)
+        :param float amount: Amount to close
         :param float trailingTriggerPrice: The price at which the trailing stop should be triggered
         :param float range_rate: The trailing percentage
-        :param bool reduce: If the order should be reduce-only
+        :param bool reduce: If the order should be reduce-only (default is True)
         :return: Response from the order placement API
         :rtype: dict
         """
         try:
+            # Vérifiez la position actuelle
+            positions = self._session.fetch_positions()
+            position = next((pos for pos in positions if pos['symbol'] == symbol), None)
+            if not position or position['amount'] < amount:
+                raise Exception(f"No sufficient position to close for {symbol}. Required: {amount}, Available: {position['amount'] if position else 0}")
+    
             # Convert amounts and prices to the appropriate precision
             amount_precision = self.convert_amount_to_precision(symbol, amount)
             trailing_trigger_price_precision = self.convert_price_to_precision(symbol, trailingTriggerPrice)
@@ -179,12 +185,9 @@ class PerpBitget():
             params = {
                 'trailingTriggerPrice': trailing_trigger_price_precision,
                 'rangeRate': range_rate_precision,
-                'triggerType': 'market_price'
+                'triggerType': 'market_price',
+                'reduceOnly': reduce  # Ensure the order is to reduce the position
             }
-    
-            # Only add reduceOnly if needed
-            if reduce:
-                params['reduceOnly'] = True
     
             # Log the params
             print(f"Params: {params}")
