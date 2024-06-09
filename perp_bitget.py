@@ -214,7 +214,8 @@ class PerpBitget():
 
     @authentication_required
     def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
-          try:
+        
+        try:
             return self._session.createOrder(
                 symbol, 
                 'market', 
