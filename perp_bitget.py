@@ -229,6 +229,11 @@ class PerpBitget():
                     "reduceOnly": reduce
                 }
             )
+
+            print(f"Amount (precision): {amoun}")
+            print(f"Trailing Trigger Price (precision): {trailingTriggerPrice}")
+            print(f"Range Rate (precision): {range_rate}")
+    
         except BaseException as err:
             raise Exception(err)      
 
