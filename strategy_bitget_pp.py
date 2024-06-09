@@ -194,7 +194,7 @@ if len(position) > 0:
     print(f"Current position : {position}")
     if position["side"] == "long" and close_long(row):
         long_market_price = float(df.iloc[-1]["close"])
-        trailing_stop_price = short_market_price * 1.01  # 1% en-dessous du prix de vente
+        trailing_stop_price = long_market_price * 1.01  # 1% en-dessous du prix de vente
         range_rate = 0.01  # 1% de suivi
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(
