@@ -179,9 +179,12 @@ class PerpBitget():
             params = {
                 'trailingTriggerPrice': trailing_trigger_price_precision,
                 'rangeRate': range_rate_precision,
-                'triggerType': 'market_price',
-                'reduceOnly': reduce
+                'triggerType': 'market_price'
             }
+    
+            # Only add reduceOnly if needed
+            if reduce:
+                params['reduceOnly'] = True
     
             # Log the params
             print(f"Params: {params}")
