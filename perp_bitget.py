@@ -151,7 +151,7 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
         """
         Place a trailing stop order to close an existing position.
     
@@ -177,8 +177,8 @@ class PerpBitget():
             # Debug: print the position to inspect its structure
             print(f"Position for {symbol}: {position}")
             
-            if not position or 'amount' not in position or float(position['amount']) < amount:
-                raise Exception(f"No sufficient position to close for {symbol}. Required: {amount}, Available: {position['amount'] if position else 0}")
+            if not position or 'contracts' not in position or float(position['contracts']) < amount:
+                raise Exception(f"No sufficient position to close for {symbol}. Required: {amount}, Available: {position['contracts'] if position else 0}")
     
             # Convert amounts and prices to the appropriate precision
             amount_precision = self.convert_amount_to_precision(symbol, amount)
