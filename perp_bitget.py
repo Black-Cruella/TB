@@ -151,7 +151,7 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=False):
         """
         Place a trailing stop order to close an existing position.
     
@@ -165,10 +165,19 @@ class PerpBitget():
         :rtype: dict
         """
         try:
-            # Vérifiez la position actuelle
+            # Fetch current positions
             positions = self._session.fetch_positions()
+            
+            # Debug: print the positions to inspect their structure
+            print(f"Positions: {positions}")
+    
+            # Find the position for the given symbol
             position = next((pos for pos in positions if pos['symbol'] == symbol), None)
-            if not position or position['amount'] < amount:
+            
+            # Debug: print the position to inspect its structure
+            print(f"Position for {symbol}: {position}")
+            
+            if not position or 'amount' not in position or float(position['amount']) < amount:
                 raise Exception(f"No sufficient position to close for {symbol}. Required: {amount}, Available: {position['amount'] if position else 0}")
     
             # Convert amounts and prices to the appropriate precision
@@ -202,6 +211,7 @@ class PerpBitget():
             )
         except Exception as err:
             raise Exception(f"An error occurred while placing the trailing stop order: {err}")
+
                 
 
     @authentication_required
