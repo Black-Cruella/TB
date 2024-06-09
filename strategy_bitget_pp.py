@@ -184,16 +184,6 @@ df['STOP_LOSS_2'] = np.where(
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
-short_market_price = float(df.iloc[-1]["close"])
-trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
-range_rate = 0.01  # 1% de suivi
-short_quantity_in_usd = usd_balance * leverage
-short_quantity = float(bitget.convert_amount_to_precision(pair, float(
-            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
-        )))
-print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
-bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
-
 row = df.iloc[-2]
 
 pd.set_option('display.max_columns', None)
@@ -203,6 +193,16 @@ if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
     if position["side"] == "long" and close_long(row):
+        long_market_price = float(df.iloc[-1]["close"])
+        trailing_stop_price = short_market_price * 1.01  # 1% en-dessous du prix de vente
+        range_rate = 0.01  # 1% de suivi
+        long_quantity_in_usd = usd_balance * leverage
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
+        )))
+        print(f"Place Long Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
+        bitget.place_trailing_stop(pair, 'sell', long_quantity, trailing_stop_price, range_rate, reduce=True)
+        
         close_long_market_price = float(df.iloc[-1]["close"])
         close_long_quantity = float(
             bitget.convert_amount_to_precision(pair, position["size"])
@@ -215,6 +215,16 @@ if len(position) > 0:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
            
     elif position["side"] == "short" and close_short(row):
+        short_market_price = float(df.iloc[-1]["close"])
+        trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
+        range_rate = 0.01  # 1% de suivi
+        short_quantity_in_usd = usd_balance * leverage
+        short_quantity = float(bitget.convert_amount_to_precision(pair, float(
+            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
+        )))
+        print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
+        bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
+        
         close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
             bitget.convert_amount_to_precision(pair, position["size"])
