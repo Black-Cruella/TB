@@ -283,7 +283,7 @@ class PerpBitget():
     def get_open_position(self,symbol=None):
         try:
             positions = self._session.fetchPositions(params = {
-                    "productType": "umcbl",
+                    "productType": "USDT-FUTURES",
                 })
             truePositions = []
             for position in positions:
