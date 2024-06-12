@@ -147,7 +147,7 @@ df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIREC
 
 positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["marketPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["marketPrice"]), "open_price": d["entryPrice"]}
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["openPriceAvg"]}
     for d in positions_data if d["symbol"] == pair]
 
 if len(positions_data) == 0:
@@ -162,7 +162,7 @@ if len(positions_data) == 0:
     df['entry_price'] = 0
 else:
     position_info = positions_data[0]
-    entry_price = position_info['entryPrice']
+    entry_price = position_info['openPriceAvg']
     df['entry_price'] = entry_price
 
 df['STOP_LOSS'] = np.where(
