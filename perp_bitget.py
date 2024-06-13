@@ -215,11 +215,12 @@ class PerpBitget():
     @authentication_required
     def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate):
         
-       try:
+        try:
             return self._session.privateMixPostV2MixOrderPlaceTpslOrder(
                 params={
                     'marginCoin': 'USDT',
                     'productType': 'usdt-futures',
+                    'marginMode' : 'isolated'
                     'symbol': symbol,
                     'size': self.convert_amount_to_precision(symbol, amount),
                     'planType': 'moving_plan',
