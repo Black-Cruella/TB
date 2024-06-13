@@ -221,12 +221,13 @@ class PerpBitget():
                     'marginCoin': 'USDT',
                     'productType': 'usdt-futures',
                     'marginMode' : 'isolated',
+                    'orderType' : 'market',
                     'symbol': symbol,
                     'size': self.convert_amount_to_precision(symbol, amount),
-                    'planType': 'moving_plan',
+                    'planType': 'track_plan',
                     'triggerPrice': trailingTriggerPrice,
                     'triggerType': 'mark_price',
-                    'holdSide': side,
+                    'side': side,
                     'rangeRate': range_rate,
                 }
             )
