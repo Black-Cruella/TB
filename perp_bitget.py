@@ -220,7 +220,7 @@ class PerpBitget():
                 params={
                     'marginCoin': 'USDT',
                     'productType': 'usdt-futures',
-                    'marginMode' : 'isolated'
+                    'marginMode' : 'isolated',
                     'symbol': symbol,
                     'size': self.convert_amount_to_precision(symbol, amount),
                     'planType': 'moving_plan',
