@@ -147,7 +147,7 @@ df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIREC
 
 positions_data = bitget.get_open_position()
 position = [
-    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["openPriceAvg"]}
+    {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
 if len(positions_data) == 0:
@@ -162,7 +162,7 @@ if len(positions_data) == 0:
     df['entry_price'] = 0
 else:
     position_info = positions_data[0]
-    entry_price = position_info['openPriceAvg']
+    entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
 df['STOP_LOSS'] = np.where(
@@ -192,28 +192,6 @@ print(df.tail(5))
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
-    if position["side"] == "long":
-
-        long_market_price = float(df.iloc[-1]["close"])
-        trailing_stop_price = long_market_price * 1.01  # 1% en-dessous du prix de vente
-        range_rate = 1  # 1% de suivi
-        long_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        print(f"Place Long Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
-        bitget.place_trailing_stop(pair, 'sell', long_quantity, trailing_stop_price, range_rate, reduce=True)
-    
-    elif position["side"] == "short":
-        
-        short_market_price = float(df.iloc[-1]["close"])
-        trailing_stop_price = short_market_price * 0.99  # 1% en-dessous du prix de vente
-        range_rate = 1  # 1% de suivi
-        short_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        print(f"Place Short Trailing Stop Order at {trailing_stop_price}$ with range rate {range_rate}")
-        bitget.place_trailing_stop(pair, 'buy', short_quantity, trailing_stop_price, range_rate, reduce=True)
-
     
     if position["side"] == "long" and close_long(row):
         close_long_market_price = float(df.iloc[-1]["close"])
@@ -239,8 +217,6 @@ if len(position) > 0:
         if production:
             bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
         
-        
-
 else:
     print("No active position")
     if open_long(row) and "long" in type:
@@ -255,7 +231,14 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        #if production:
+        
+        if production:
+            trailing_stop_price = long_market_price * 1.002  # 0.2% au dessus du prix d'achat
+            rounded_price = round(trailing_stop_price, 3)
+            range_rate = 0.5  # 0.5% de suivi
+            print(f"Place Long Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
+            bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, range_rate)
+            
         #    stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
         #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
         #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
@@ -272,7 +255,14 @@ else:
         )
         if production:
             bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-        #if production:
+
+        if production:
+            trailing_stop_price = short_market_price * 0.998  # 0.2% en-dessous du prix de vente
+            rounded_price = round(trailing_stop_price, 3)
+            range_rate = 0.5  # 1% de suivi
+            print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
+            bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, range_rate)
+
         #    stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
         #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
         #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
