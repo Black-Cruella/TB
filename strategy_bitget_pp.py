@@ -92,18 +92,15 @@ zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth
 zigzag_prices = [np.nan] * len(df)
 zigzag_volumes = [np.nan] * len(df)
 
-# Assign zigzag values to the arrays
-for pivot in zigzag:
-    zigzag_prices[pivot[0]] = pivot[1]
-    zigzag_volumes[pivot[0]] = pivot[2]
-
-# Store zigzag values in new columns
-df['zigzag_price'] = pd.Series(zigzag_prices, index=df.index)
-#df['zigzag_volume'] = pd.Series(zigzag_volumes, index=df.index)
+# Populate zigzag values in the DataFrame
+for i, price, volume in zigzag:
+    zigzag_prices[i] = price
+    zigzag_volumes[i] = volume
 
 # Add zigzag columns to DataFrame
 df['zigzag_price'] = zigzag_prices
 #df['zigzag_volume'] = zigzag_volumes
+
 df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
 df['prev_zigzag'] = df['zigzag_price'].shift(1)
 df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
