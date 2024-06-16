@@ -100,7 +100,7 @@ for pivot in zigzag:
 # Add zigzag columns to DataFrame
 df['zigzag_price'] = zigzag_prices
 #df['zigzag_volume'] = zigzag_volumes
-df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
+#df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
 
 
 positions_data = bitget.get_open_position()
@@ -114,7 +114,8 @@ print("USD balance :", round(usd_balance, 2), "$")
 row = df.iloc[-2]
 
 pd.set_option('display.max_columns', None)
-print(df.tail(5))
+pd.set_option('display.max_rows', None)
+print(df.tail(150))
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
