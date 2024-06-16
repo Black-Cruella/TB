@@ -102,13 +102,19 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     # Add new columns if needed
     df['last_zigzag_price'] = zigzag_df['price'].shift(1)
     df['last_zigzag_price'] = df['last_zigzag_price'].fillna(method='ffill')
-
     
     return df, zigzag_df
 
+def add_signal_column(df):
+    df['signal'] = 'WAITING'
+    for i in range(1, len(df)):
+        if df['price'].iloc[i] != df['price'].iloc[i-1]:
+            df['signal'].iloc[i] = 'NEW POINT'
+    return df
+
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=1.5, depth=5)
 
-print(zigzag_df)
+
 
 positions_data = bitget.get_open_position()
 position = [
@@ -120,6 +126,8 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-2]
 
+
+print(zigzag_df)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 print(df.tail(5))
