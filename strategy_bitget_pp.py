@@ -96,25 +96,14 @@ df_zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, de
 # Create DataFrame to store zigzag points
 print(df_zigzag)
 
-
-# Create arrays to store zigzag values
-zigzag_prices = [np.nan] * len(df)
-zigzag_volumes = [np.nan] * len(df)
-
-# Populate zigzag values in the DataFrame
-for timestamp, price, volume in zigzag:
-    idx = df.index.get_loc(timestamp)  # Get integer index from Timestamp index
-    zigzag_prices[idx] = price
-    zigzag_volumes[idx] = volume
-
 # Add zigzag columns to DataFrame
-df['zigzag_price'] = zigzag_prices
+#df['zigzag_price'] = zigzag_prices
 # df['zigzag_volume'] = zigzag_volumes
 
-df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
-df['prev_zigzag'] = df['zigzag_price'].shift(1)
-df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
-df['prev_zigzag'] = df['prev_zigzag'].fillna(method='ffill')
+#df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
+#df['prev_zigzag'] = df['zigzag_price'].shift(1)
+#df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
+#df['prev_zigzag'] = df['prev_zigzag'].fillna(method='ffill')
 
 positions_data = bitget.get_open_position()
 position = [
