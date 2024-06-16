@@ -39,79 +39,28 @@ bitget = PerpBitget(
 # Get data
 df = bitget.get_last_historical(pair, timeframe, 100)
 
-# Indicators
-def calculate_pivots(prices_high, prices_low, depth):
-    pivots_high = [np.nan] * len(prices_high)
-    pivots_low = [np.nan] * len(prices_low)
-    for i in range(depth, len(prices_high) - depth):
-        if prices_high.iloc[i] == max(prices_high.iloc[i - depth:i + depth + 1]):
-            pivots_high[i] = prices_high.iloc[i]
-        if prices_low.iloc[i] == min(prices_low.iloc[i - depth:i + depth + 1]):
-            pivots_low[i] = prices_low.iloc[i]
-    return pivots_high, pivots_low
+def pivot_points_high_low(df, left, right, percent_threshold=2.0):
+    # Calcul des potential pivots highs
+    highs = df['high'].rolling(window=left + right + 1, center=True).max()
+    pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
 
-def calc_dev(base_price, price):
-    return 100 * (price - base_price) / base_price
+    # Calcul des potential pivots lows
+    lows = df['low'].rolling(window=left + right + 1, center=True).min()
+    pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
-    pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
+    # Ajouter l'écart de pourcentage entre les points pivots
+    percent_threshold /= 100.0  # Convertir en décimal pour le calcul
+    if percent_threshold > 0:
+        high_threshold = highs * (1 + percent_threshold)
+        low_threshold = lows * (1 - percent_threshold)
+        pivot_high_mask &= (df['high'] >= high_threshold)
+        pivot_low_mask &= (df['low'] <= low_threshold)
 
-    zigzag = []
-    last_high = None
-    last_low = None
-    cumulative_volume = 0
+    # Utiliser pivot_high_mask et pivot_low_mask pour insérer les valeurs des pivots
+    df['pivot_high_value'] = np.where(pivot_high_mask, df['high'], np.nan)
+    df['pivot_low_value'] = np.where(pivot_low_mask, df['low'], np.nan)
 
-    for i in range(len(prices_high)):
-        if not np.isnan(pivots_high[i]):
-            dev = calc_dev(last_high, pivots_high[i]) if last_high is not None else np.inf
-            if last_high is None or dev >= dev_threshold:
-                zigzag.append((i, pivots_high[i], cumulative_volume, 'high'))
-                last_high = pivots_high[i]
-                cumulative_volume = 0
-        elif not np.isnan(pivots_low[i]):
-            dev = calc_dev(last_low, pivots_low[i]) if last_low is not None else np.inf
-            if last_low is None or dev <= -dev_threshold:
-                zigzag.append((i, pivots_low[i], cumulative_volume, 'low'))
-                last_low = pivots_low[i]
-                cumulative_volume = 0
-        cumulative_volume += volumes.iloc[i]
-
-    df_zigzag = pd.DataFrame(zigzag, columns=['Index', 'Price', 'Cumulative Volume', 'Type'])
-    df_zigzag.set_index('Index', inplace=True)
-
-    return df_zigzag
-    return df_zigzag
-
-# Calculate zigzag pivots and cumulative volume
-dev_threshold = 2.0  # en pourcentage
-depth = 5  # en nombre de barres
-
-# Assuming you have 'high' and 'low' columns in your DataFrame 'df'
-prices_high = df['high']
-prices_low = df['low']
-volumes = df['volume']
-
-# Calculate zigzag values
-df_zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
-
-# Affichage des pivots highs
-pivot_highs = df_zigzag[df_zigzag['Price'].notna()]['Price']
-print("Pivots Highs:")
-print(pivot_highs)
-
-# Affichage des pivots lows
-pivot_lows = df_zigzag[df_zigzag['Price'].notna()]['Price']
-print("Pivots Lows:")
-print(pivot_lows)
-
-# Add zigzag columns to DataFrame
-#df['zigzag_price'] = zigzag_prices
-# df['zigzag_volume'] = zigzag_volumes
-
-#df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
-#df['prev_zigzag'] = df['zigzag_price'].shift(1)
-#df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
-#df['prev_zigzag'] = df['prev_zigzag'].fillna(method='ffill')
+    return df['pivot_high_value'], df['pivot_low_value']
 
 positions_data = bitget.get_open_position()
 position = [
