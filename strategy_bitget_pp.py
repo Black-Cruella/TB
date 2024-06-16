@@ -76,7 +76,10 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
 
-    return zigzag
+    zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume'])
+    zigzag_df.set_index('timestamp', inplace=True)
+
+    return zigzag_df
 
 # Example usage with a DataFrame `df`
 def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
@@ -88,10 +91,8 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     df['pivot_high'] = pivots_high
     df['pivot_low'] = pivots_low
 
-    zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
-    zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume'])
-    zigzag_df.set_index('timestamp', inplace=True)
-    
+    zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
+
     df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
     
     # Add new columns if needed
