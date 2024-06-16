@@ -48,17 +48,27 @@ def pivot_points_high_low(df, left, right, percent_threshold=2.0):
     lows = df['low'].rolling(window=left + right + 1, center=True).min()
     pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-    # Ajouter l'écart de pourcentage entre les points pivots
     percent_threshold /= 100.0  # Convertir en décimal pour le calcul
-    if percent_threshold > 0:
-        high_threshold = highs * (1 + percent_threshold)
-        low_threshold = lows * (1 - percent_threshold)
-        pivot_high_mask &= (df['high'] >= high_threshold)
-        pivot_low_mask &= (df['low'] <= low_threshold)
 
-    # Utiliser pivot_high_mask et pivot_low_mask pour insérer les valeurs des pivots
-    df['pivot_high_value'] = np.where(pivot_high_mask, df['high'], np.nan)
-    df['pivot_low_value'] = np.where(pivot_low_mask, df['low'], np.nan)
+    last_pivot_high = None
+    last_pivot_low = None
+
+    # Créer des listes pour stocker les valeurs des pivots validés
+    pivot_high_values = [np.nan] * len(df)
+    pivot_low_values = [np.nan] * len(df)
+
+    for i in range(len(df)):
+        if pivot_high_mask[i]:
+            if last_pivot_low is None or (df['high'][i] >= last_pivot_low * (1 + percent_threshold)):
+                pivot_high_values[i] = df['high'][i]
+                last_pivot_high = df['high'][i]
+        if pivot_low_mask[i]:
+            if last_pivot_high is None or (df['low'][i] <= last_pivot_high * (1 - percent_threshold)):
+                pivot_low_values[i] = df['low'][i]
+                last_pivot_low = df['low'][i]
+
+    df['pivot_high_value'] = pivot_high_values
+    df['pivot_low_value'] = pivot_low_values
 
     return df['pivot_high_value'], df['pivot_low_value']
 
