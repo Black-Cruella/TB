@@ -37,7 +37,7 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_last_historical(pair, timeframe, 100)
+df = bitget.get_last_historical(pair, timeframe, 300)
 
 import numpy as np
 
