@@ -57,28 +57,29 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
     pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
 
     zigzag = []
-    last_pivot = None
+    last_high = None
+    last_low = None
     cumulative_volume = 0
 
     for i in range(len(prices_high)):
         if not np.isnan(pivots_high[i]):
-            dev = calc_dev(last_pivot, pivots_high[i]) if last_pivot is not None else np.inf
-            if last_pivot is None or dev >= dev_threshold:
-                zigzag.append((i, pivots_high[i], cumulative_volume))
-                last_pivot = pivots_high[i]
+            dev = calc_dev(last_high, pivots_high[i]) if last_high is not None else np.inf
+            if last_high is None or dev >= dev_threshold:
+                zigzag.append((i, pivots_high[i], cumulative_volume, 'high'))
+                last_high = pivots_high[i]
                 cumulative_volume = 0
         elif not np.isnan(pivots_low[i]):
-            dev = calc_dev(last_pivot, pivots_low[i]) if last_pivot is not None else np.inf
-            if last_pivot is None or dev <= -dev_threshold:
-                zigzag.append((i, pivots_low[i], cumulative_volume))
-                last_pivot = pivots_low[i]
+            dev = calc_dev(last_low, pivots_low[i]) if last_low is not None else np.inf
+            if last_low is None or dev <= -dev_threshold:
+                zigzag.append((i, pivots_low[i], cumulative_volume, 'low'))
+                last_low = pivots_low[i]
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
 
-    # Convertir la liste zigzag en DataFrame
-    df_zigzag = pd.DataFrame(zigzag, columns=['Index', 'Price', 'Cumulative Volume'])
-    df_zigzag.set_index('Index', inplace=True)  # Définir l'index comme 'Index'
+    df_zigzag = pd.DataFrame(zigzag, columns=['Index', 'Price', 'Cumulative Volume', 'Type'])
+    df_zigzag.set_index('Index', inplace=True)
 
+    return df_zigzag
     return df_zigzag
 
 # Calculate zigzag pivots and cumulative volume
