@@ -88,6 +88,22 @@ volumes = df['volume']
 
 zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
 
+# Initialize lists to store zigzag points
+zigzag_x = []
+zigzag_y = []
+
+# Record zigzag points with their timestamps and prices
+for i, (idx, price, cum_volume) in enumerate(zigzag):
+    zigzag_x.append(df.index[idx])
+    zigzag_y.append(price)
+
+# Create a DataFrame to store zigzag points (optional)
+zigzag_df = pd.DataFrame({'timestamp': zigzag_x, 'price': zigzag_y})
+
+# Display or use zigzag_df as needed in your backtest
+print(zigzag_df)
+
+
 # Create arrays to store zigzag values
 zigzag_prices = [np.nan] * len(df)
 zigzag_volumes = [np.nan] * len(df)
