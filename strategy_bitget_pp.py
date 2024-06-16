@@ -64,18 +64,22 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
         if not np.isnan(highs[i]):
             dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev >= dev_threshold:
-                zigzag.append((df.index[i], highs[i], cumulative_volume))
+                zigzag.append((i, highs[i], cumulative_volume))
                 last_pivot = highs[i]
                 cumulative_volume = 0
         elif not np.isnan(lows[i]):
             dev = calc_dev(last_pivot, lows[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev <= -dev_threshold:
-                zigzag.append((df.index[i], lows[i], cumulative_volume))
+                zigzag.append((i, lows[i], cumulative_volume))
                 last_pivot = lows[i]
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
 
-    return zigzag
+    # Convertir la liste zigzag en DataFrame
+    df_zigzag = pd.DataFrame(zigzag, columns=['Index', 'Price', 'Cumulative Volume'])
+    df_zigzag.set_index('Index', inplace=True)  # Définir l'index comme 'Index'
+
+    return df_zigzag
 
 # Calculate zigzag pivots and cumulative volume
 dev_threshold = 2.0  # en pourcentage
@@ -87,13 +91,10 @@ prices_low = df['low']
 volumes = df['volume']
 
 # Calculate zigzag values
-zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
+df_zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
 
 # Create DataFrame to store zigzag points
-zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume'])
-
-# Display or use zigzag_df as needed in your backtest
-print(zigzag_df)
+print(df_zigzag)
 
 
 # Create arrays to store zigzag values
