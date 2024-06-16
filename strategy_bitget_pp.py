@@ -100,7 +100,11 @@ for pivot in zigzag:
 # Add zigzag columns to DataFrame
 df['zigzag_price'] = zigzag_prices
 #df['zigzag_volume'] = zigzag_volumes
-#df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
+df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
+df['prev_zigzag'] = df['zigzag_price'].shift(1)
+df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
+df['prev_zigzag'] = df['prev_zigzag'].fillna(method='ffill')
+
 
 
 positions_data = bitget.get_open_position()
