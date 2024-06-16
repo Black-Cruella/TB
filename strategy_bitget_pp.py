@@ -101,7 +101,8 @@ zigzag_prices = [np.nan] * len(df)
 zigzag_volumes = [np.nan] * len(df)
 
 # Populate zigzag values in the DataFrame
-for idx, price, volume in zigzag:
+for timestamp, price, volume in zigzag:
+    idx = df.index.get_loc(timestamp)  # Get integer index from Timestamp index
     zigzag_prices[idx] = price
     zigzag_volumes[idx] = volume
 
