@@ -29,33 +29,6 @@ leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
 
-type = ["long", "short"]
-
-def open_long(row):
-    if row['buy_signal']:
-        return True
-    else:
-        return False
-
-def close_long(row):
-    if row['close_long'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
-        return True
-    else:
-        return False
-
-def open_short(row):
-    if row['sell_signal']:
-        return True
-    else:
-        return False
-
-def close_short(row):
-    if row['close_short'] or row['STOP_LOSS'] or row['STOP_LOSS_2']:
-        return True
-    else:
-        return False
-
-
 bitget = PerpBitget(
     apiKey=secret[account_to_select]["apiKey"],
     secret=secret[account_to_select]["secret"],
@@ -65,121 +38,72 @@ bitget = PerpBitget(
 # Get data
 df = bitget.get_last_historical(pair, timeframe, 100)
 
-# Calculer les superTrend
-ST_length = 21
-ST_multiplier = 1.5
-superTrend1 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
-df['SUPER_TREND1'] = superTrend1['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-df['SUPER_TREND_DIRECTION1'] = superTrend1['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+#Indicators
+def calculate_pivots(prices_high, prices_low, depth):
+    pivots_high = [np.nan] * len(prices_high)
+    pivots_low = [np.nan] * len(prices_low)
+    for i in range(depth, len(prices_high) - depth):
+        if prices_high.iloc[i] == max(prices_high.iloc[i - depth:i + depth + 1]):
+            pivots_high[i] = prices_high.iloc[i]
+        if prices_low.iloc[i] == min(prices_low.iloc[i - depth:i + depth + 1]):
+            pivots_low[i] = prices_low.iloc[i]
+    return pivots_high, pivots_low
 
-ST_length = 30
-ST_multiplier = 3.0
-superTrend2 = pda.supertrend(df['high'], df['low'], df['close'], length=ST_length, multiplier=ST_multiplier)
-df['SUPER_TREND2'] = superTrend2['SUPERT_'+str(ST_length)+"_"+str(ST_multiplier)]
-df['SUPER_TREND_DIRECTION2'] = superTrend2['SUPERTd_'+str(ST_length)+"_"+str(ST_multiplier)]
+def calc_dev(base_price, price):
+    return 100 * (price - base_price) / base_price
 
-def calculate_ema5(data, alpha):
-    ema_values = [data.iloc[0]]  # La première valeur de l'EMA est simplement la première valeur de la série
-    for i in range(1, len(data)):
-        ema = alpha * data.iloc[i] + (1 - alpha) * ema_values[-1]
-        ema_values.append(ema)
-    return ema_values
-alpha = 2 / (5 + 1)  # Calcul du facteur de lissage
-df['EMA_5'] = calculate_ema5(df['close'], alpha)
+def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
+    highs, lows = calculate_pivots(prices_high, prices_low, depth)
 
-def calculate_ema_direction(ema_values):
-    ema_direction = [0]  # Initialise la liste de direction de EMA avec une valeur arbitraire, car la première direction n'est pas définie
-    for i in range(1, len(ema_values)):
-        if ema_values[i] > ema_values[i-1]:
-            ema_direction.append(1)
-        elif ema_values[i] < ema_values[i-1]:
-            ema_direction.append(-1)
-        else:
-            ema_direction.append(0)  # Si les valeurs sont égales, on peut mettre 0 ou une autre valeur qui indique qu'il n'y a pas de changement
-    return ema_direction
+    zigzag = []
+    last_pivot = None
+    cumulative_volume = 0
 
-df['EMA_direction'] = calculate_ema_direction(df['EMA_5'])
+    for i in range(len(prices_high)):
+        if not np.isnan(highs[i]):
+            dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
+            if last_pivot is None or dev >= dev_threshold:
+                zigzag.append((i, highs[i], cumulative_volume))
+                last_pivot = highs[i]
+                cumulative_volume = 0
+        elif not np.isnan(lows[i]):
+            dev = calc_dev(last_pivot, lows[i]) if last_pivot is not None else np.inf
+            if last_pivot is None or dev <= -dev_threshold:
+                zigzag.append((i, lows[i], cumulative_volume))
+                last_pivot = lows[i]
+                cumulative_volume = 0
+        cumulative_volume += volumes.iloc[i]
 
-import numpy as np
-def pivot_points_high_low(df, left, right):
-    # Calcul des potential pivots highs
-    highs = df['high'].rolling(window=left + right + 1, center=True).max()
-    pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
+    return zigzag
 
-    # Calcul des potential pivots lows
-    lows = df['low'].rolling(window=left + right + 1, center=True).min()
-    pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
+# Calculate zigzag pivots and cumulative volume
+dev_threshold = 2.0  # en pourcentage
+depth = 5  # en nombre de barres
 
-    # Utiliser pivot_high_mask et pivot_low_mask pour insérer les valeurs des pivots
-    df['pivot_high_value'] = np.where(pivot_high_mask, df['high'], np.nan)
-    df['pivot_low_value'] = np.where(pivot_low_mask, df['low'], np.nan)
+# Assuming you have 'high' and 'low' columns in your DataFrame 'df'
+prices_high = df['high']
+prices_low = df['low']
+volumes = df['volume']
 
-    return df['pivot_high_value'], df['pivot_low_value']
+zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
 
-# Appliquer la fonction et ajouter les valeurs de pivots au DataFrame
-df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=10, right=10)
-df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
-df['previous_pivot_high_value'] = df['pivot_high_value'].shift(1)
-df['previous_pivot_high_value'] = df['previous_pivot_high_value'].where(df['pivot_high_value'] != df['previous_pivot_high_value'])
-df['previous_pivot_high_value'] = df['previous_pivot_high_value'].fillna(method='ffill')
-df['PH_direction'] = df.apply(
-    lambda row: 1 if row['pivot_high_value'] > row['previous_pivot_high_value'] else
-               (-1 if row['pivot_high_value'] < row['previous_pivot_high_value'] else 0),
-    axis=1
-)
+# Create arrays to store zigzag values
+zigzag_prices = [np.nan] * len(df)
+zigzag_volumes = [np.nan] * len(df)
 
-df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
-df['previous_pivot_low_value'] = df['pivot_low_value'].shift(1)
-df['previous_pivot_low_value'] = df['previous_pivot_low_value'].where(df['pivot_low_value'] != df['previous_pivot_low_value'])
-df['previous_pivot_low_value'] = df['previous_pivot_low_value'].fillna(method='ffill')
-df['PL_direction'] = df.apply(
-    lambda row: 1 if row['pivot_low_value'] > row['previous_pivot_low_value'] else
-               (-1 if row['pivot_low_value'] < row['previous_pivot_low_value'] else 0),
-    axis=1
-)
+# Assign zigzag values to the arrays
+for pivot in zigzag:
+    zigzag_prices[pivot[0]] = pivot[1]
+    zigzag_volumes[pivot[0]] = pivot[2]
 
-df['buy_signal'] = (df['SUPER_TREND_DIRECTION2'] == 1) & (df['SUPER_TREND_DIRECTION1'] == 1) 
-df['close_long'] = (df['SUPER_TREND_DIRECTION1'] == -1) & (df['SUPER_TREND_DIRECTION2'] == -1) & (df['PH_direction'] == -1) & (df['PL_direction'] == -1)
-
-
-df['sell_signal'] = (df['SUPER_TREND_DIRECTION2'] == -1) & (df['SUPER_TREND_DIRECTION1'] == -1)
-df['close_short'] = (df['SUPER_TREND_DIRECTION1'] == 1) & (df['SUPER_TREND_DIRECTION2'] == 1) & (df['PH_direction'] == 1) & (df['PL_direction'] == 1)
+# Add zigzag columns to DataFrame
+df['zigzag_price'] = zigzag_prices
+df['zigzag_volume'] = zigzag_volumes
 
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
-
-if len(positions_data) == 0:
-    df['side'] = None
-else :
-    current_position = positions_data[0]
-    side = current_position['side']
-    df['side'] = side
-
-# Ajouter le Open Price
-if len(positions_data) == 0:
-    df['entry_price'] = 0
-else:
-    position_info = positions_data[0]
-    entry_price = position_info['entryPrice']
-    df['entry_price'] = entry_price
-
-df['STOP_LOSS'] = np.where(
-    (df['side'] == 'short') & (df['close'] > df['pivot_high_value']), True,
-    np.where(
-        (df['side'] == 'long') & (df['close'] < df['pivot_low_value']), True,
-        False  # Si aucune des conditions n'est remplie, marquer comme False
-    )
-)
-
-df['STOP_LOSS_2'] = np.where(
-    (df['side'] == 'short') & (df['entry_price'] * 1.01 < df['close']), True,
-    np.where(
-        (df['side'] == 'long') & (df['entry_price'] * 0.99 > df['close']), True,
-        False  # Si aucune des conditions n'est remplie, marquer comme False
-    )
-)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
@@ -188,84 +112,6 @@ row = df.iloc[-2]
 
 pd.set_option('display.max_columns', None)
 print(df.tail(5))
-
-if len(position) > 0:
-    position = position[0]
-    print(f"Current position : {position}")
-    
-    if position["side"] == "long" and close_long(row):
-        close_long_market_price = float(df.iloc[-1]["close"])
-        close_long_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        exchange_close_long_quantity = close_long_quantity * close_long_market_price
-        print(
-            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-           
-    elif position["side"] == "short" and close_short(row):
-        close_short_market_price = float(df.iloc[-1]["close"])
-        close_short_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        exchange_close_short_quantity = close_short_quantity * close_short_market_price
-        print(
-            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
-        
-else:
-    print("No active position")
-    if open_long(row) and "long" in type:
-        long_market_price = float(df.iloc[-1]["close"])
-        long_quantity_in_usd = usd_balance * leverage
-        long_quantity = float(bitget.convert_amount_to_precision(pair, float(
-            bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price)
-        )))
-        exchange_long_quantity = long_quantity * long_market_price
-        print(
-            f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {long_market_price}$ ~{round(exchange_long_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "buy", long_quantity, reduce=False)
-        
-        if production:
-            trailing_stop_price = long_market_price * 1.002  # 0.2% au dessus du prix d'achat
-            rounded_price = round(trailing_stop_price, 3)
-            range_rate = 0.5  # 0.5% de suivi
-            print(f"Place Long Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
-            bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, range_rate)
-            
-        #    stop_loss_price = long_market_price * 1.002  # 1% sous le prix d'achat
-        #    print(f"Place Long Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
-
-    elif open_short(row) and "short" in type:
-        short_market_price = float(df.iloc[-1]["close"])
-        short_quantity_in_usd = usd_balance * leverage
-        short_quantity = float(bitget.convert_amount_to_precision(pair, float(
-            bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price)
-        )))
-        exchange_short_quantity = short_quantity * short_market_price
-        print(
-            f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {short_market_price}$ ~{round(exchange_short_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "sell", short_quantity, reduce=False)
-
-        if production:
-            trailing_stop_price = short_market_price * 0.998  # 0.2% en-dessous du prix de vente
-            rounded_price = round(trailing_stop_price, 3)
-            range_rate = 0.5  # 1% de suivi
-            print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
-            bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, range_rate)
-
-        #    stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
-        #    print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-        #    bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
