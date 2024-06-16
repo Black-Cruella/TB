@@ -93,8 +93,15 @@ volumes = df['volume']
 # Calculate zigzag values
 df_zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
 
-# Create DataFrame to store zigzag points
-print(df_zigzag)
+# Affichage des pivots highs
+pivot_highs = df_zigzag[df_zigzag['Price'].notna()]['Price']
+print("Pivots Highs:")
+print(pivot_highs)
+
+# Affichage des pivots lows
+pivot_lows = df_zigzag[df_zigzag['Price'].notna()]['Price']
+print("Pivots Lows:")
+print(pivot_lows)
 
 # Add zigzag columns to DataFrame
 #df['zigzag_price'] = zigzag_prices
