@@ -54,7 +54,7 @@ def calculate_pivots(prices_high, prices_low, depth):
 def calc_dev(base_price, price):
     return 100 * (price - base_price) / base_price
 
-def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
+def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, timestamps):
     highs, lows = calculate_pivots(prices_high, prices_low, depth)
 
     zigzag = []
@@ -65,13 +65,13 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
         if not np.isnan(highs[i]):
             dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev >= dev_threshold:
-                zigzag.append((i, highs[i], cumulative_volume))
+                zigzag.append((timestamps[i], highs[i], cumulative_volume))
                 last_pivot = highs[i]
                 cumulative_volume = 0
         elif not np.isnan(lows[i]):
             dev = calc_dev(last_pivot, lows[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev <= -dev_threshold:
-                zigzag.append((i, lows[i], cumulative_volume))
+                zigzag.append((timestamps[i], lows[i], cumulative_volume))
                 last_pivot = lows[i]
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
@@ -91,7 +91,7 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     df['pivot_high'] = pivots_high
     df['pivot_low'] = pivots_low
 
-    zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
+    zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, timestamps)
 
     df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
     
