@@ -74,6 +74,10 @@ def pivot_points_high_low(df, left, right, percent_threshold=2.0):
 
 df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5, percent_threshold=2.0)
 
+df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
+df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
+
+
 positions_data = bitget.get_open_position()
 position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["entryPrice"]}
