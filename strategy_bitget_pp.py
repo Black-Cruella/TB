@@ -39,7 +39,7 @@ bitget = PerpBitget(
 # Get data
 df = bitget.get_last_historical(pair, timeframe, 100)
 
-#Indicators
+# Indicators
 def calculate_pivots(prices_high, prices_low, depth):
     pivots_high = [np.nan] * len(prices_high)
     pivots_low = [np.nan] * len(prices_low)
@@ -86,6 +86,7 @@ prices_high = df['high']
 prices_low = df['low']
 volumes = df['volume']
 
+# Calculate zigzag values
 zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
 
 # Initialize lists to store zigzag points
@@ -109,20 +110,18 @@ zigzag_prices = [np.nan] * len(df)
 zigzag_volumes = [np.nan] * len(df)
 
 # Populate zigzag values in the DataFrame
-for i, price, volume in zigzag:
-    zigzag_prices[i] = price
-    zigzag_volumes[i] = volume
+for i, (idx, price, volume) in enumerate(zigzag):
+    zigzag_prices[idx] = price
+    zigzag_volumes[idx] = volume
 
 # Add zigzag columns to DataFrame
 df['zigzag_price'] = zigzag_prices
-#df['zigzag_volume'] = zigzag_volumes
+# df['zigzag_volume'] = zigzag_volumes
 
 df['zigzag_price'] = df['zigzag_price'].fillna(method='ffill')
 df['prev_zigzag'] = df['zigzag_price'].shift(1)
 df['prev_zigzag'] = df['prev_zigzag'].where(df['zigzag_price'] != df['prev_zigzag'])
 df['prev_zigzag'] = df['prev_zigzag'].fillna(method='ffill')
-
-
 
 positions_data = bitget.get_open_position()
 position = [
