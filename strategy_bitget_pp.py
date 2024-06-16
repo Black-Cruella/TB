@@ -97,6 +97,10 @@ for pivot in zigzag:
     zigzag_prices[pivot[0]] = pivot[1]
     zigzag_volumes[pivot[0]] = pivot[2]
 
+# Store zigzag values in new columns
+df['zigzag_price'] = pd.Series(zigzag_prices, index=df.index)
+#df['zigzag_volume'] = pd.Series(zigzag_volumes, index=df.index)
+
 # Add zigzag columns to DataFrame
 df['zigzag_price'] = zigzag_prices
 #df['zigzag_volume'] = zigzag_volumes
