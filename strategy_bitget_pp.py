@@ -99,12 +99,10 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     df['pivot_high'] = df['pivot_high'].fillna(method='ffill')
     df['pivot_low'] = df['pivot_low'].fillna(method='ffill')
     df['price'] = df['price'].fillna(method='ffill')
-    
     # Add new columns if needed
-    df['last_zigzag_price'] = df['price'].shift(1)
-    df['second_last_zigzag_price'] = df['price'].shift(2)
+    df['last_zigzag_price'] = zigzag_df['price'].shift(2)
     df['last_zigzag_price'] = df['last_zigzag_price'].fillna(method='ffill')
-    df['second_last_zigzag_price'] = df['second_last_zigzag_price'].fillna(method='ffill')
+
     
     return df, zigzag_df
 
