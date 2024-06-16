@@ -86,6 +86,7 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     prices_high = df['high']
     prices_low = df['low']
     volumes = df['volume']
+    timestamps = df.index
 
     pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
     df['pivot_high'] = pivots_high
@@ -94,6 +95,12 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, timestamps)
 
     df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
+    df.drop(columns=['cumulative_volume'], inplace=True)
+    df['pivot_high'] = df['pivot_high'].fillna(method='ffill')
+    df['pivot_low'] = df['pivot_low'].fillna(method='ffill')
+    df['price'] = df['price'].fillna(method='ffill')
+    df['last_zigzag_price'] = df['last_zigzag_price'].fillna(method='ffill')
+    df['second_last_zigzag_price'] = df['second_last_zigzag_price'].fillna(method='ffill')
     
     # Add new columns if needed
     df['last_zigzag_price'] = df['price'].shift(1)
