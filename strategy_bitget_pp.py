@@ -89,18 +89,14 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     df['pivot_low'] = pivots_low
 
     zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
-    zigzag_df = pd.DataFrame(zigzag, columns=['index', 'price', 'cumulative_volume'])
-
-    df['last_zigzag_price'] = np.nan
-    df['second_last_zigzag_price'] = np.nan
+    zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume'])
+    zigzag_df.set_index('timestamp', inplace=True)
     
-    if len(zigzag) >= 2:
-        last_index, last_price, _ = zigzag[-1]
-        second_last_index, second_last_price, _ = zigzag[-2]
-
-        # Add the last and second last zigzag prices to the DataFrame
-        df.at[last_index, 'last_zigzag_price'] = last_price
-        df.at[second_last_index, 'second_last_zigzag_price'] = second_last_price
+    df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
+    
+    # Add new columns if needed
+    df['last_zigzag_price'] = df['price'].shift(1)
+    df['second_last_zigzag_price'] = df['price'].shift(2)
     
     return df, zigzag_df
 
