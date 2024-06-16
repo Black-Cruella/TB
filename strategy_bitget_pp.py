@@ -112,9 +112,14 @@ def add_signal_column(df):
             df.loc[df.index[i], 'signal'] = 'NEW POINT'
     return df
 
+def add_direction_column(df):
+    df['direction'] = 'DIRECTION'
+    df['direction'] = np.where(df['price'] < df['last_zigzag_price'], 'GO LONG', 'GO SHORT')
+    return df
+
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=1.5, depth=5)
 df = add_signal_column(df)
-
+df = add_direction_column(df)
 
 positions_data = bitget.get_open_position()
 position = [
