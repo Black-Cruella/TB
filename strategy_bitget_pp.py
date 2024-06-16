@@ -126,6 +126,33 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-2]
 
+if len(position) > 0:
+    position = position[0]
+    print(f"Current position : {position}")
+    if position["side"] == "long" and row["signal"] == "NEW POINT":
+        close_long_market_price = float(df.iloc[-1]["close"])
+        close_long_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
+        exchange_close_long_quantity = close_long_quantity * close_long_market_price
+        print(
+            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
+           
+    elif position["side"] == "short" and row["signal"] == "NEW POINT":
+        close_short_market_price = float(df.iloc[-1]["close"])
+        close_short_quantity = float(
+            bitget.convert_amount_to_precision(pair, position["size"])
+        )
+        exchange_close_short_quantity = close_short_quantity * close_short_market_price
+        print(
+            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
+        )
+        if production:
+            bitget.place_market_order(pair, "buy", close_short_quantity, reduce=True)
+        
 
 print(zigzag_df)
 pd.set_option('display.max_columns', None)
