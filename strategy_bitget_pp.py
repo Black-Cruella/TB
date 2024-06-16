@@ -54,24 +54,24 @@ def calc_dev(base_price, price):
     return 100 * (price - base_price) / base_price
 
 def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
-    highs, lows = calculate_pivots(prices_high, prices_low, depth)
+    pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
 
     zigzag = []
     last_pivot = None
     cumulative_volume = 0
 
     for i in range(len(prices_high)):
-        if not np.isnan(highs[i]):
-            dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
+        if not np.isnan(pivots_high[i]):
+            dev = calc_dev(last_pivot, pivots_high[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev >= dev_threshold:
-                zigzag.append((i, highs[i], cumulative_volume))
-                last_pivot = highs[i]
+                zigzag.append((i, pivots_high[i], cumulative_volume))
+                last_pivot = pivots_high[i]
                 cumulative_volume = 0
-        elif not np.isnan(lows[i]):
-            dev = calc_dev(last_pivot, lows[i]) if last_pivot is not None else np.inf
+        elif not np.isnan(pivots_low[i]):
+            dev = calc_dev(last_pivot, pivots_low[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev <= -dev_threshold:
-                zigzag.append((i, lows[i], cumulative_volume))
-                last_pivot = lows[i]
+                zigzag.append((i, pivots_low[i], cumulative_volume))
+                last_pivot = pivots_low[i]
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
 
