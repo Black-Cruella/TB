@@ -41,45 +41,62 @@ df = bitget.get_last_historical(pair, timeframe, 100)
 
 import numpy as np
 
-def pivot_points_high_low(df, left, right):
-    # Calcul des potential pivots highs
-    highs = df['high'].rolling(window=left + right + 1, center=True).max()
-    pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
+def calculate_pivots(prices_high, prices_low, depth):
+    pivots_high = [np.nan] * len(prices_high)
+    pivots_low = [np.nan] * len(prices_low)
+    for i in range(depth, len(prices_high) - depth):
+        if prices_high.iloc[i] == max(prices_high.iloc[i - depth:i + depth + 1]):
+            pivots_high[i] = prices_high.iloc[i]
+        if prices_low.iloc[i] == min(prices_low.iloc[i - depth:i + depth + 1]):
+            pivots_low[i] = prices_low.iloc[i]
+    return pivots_high, pivots_low
 
-    # Calcul des potential pivots lows
-    lows = df['low'].rolling(window=left + right + 1, center=True).min()
-    pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
+def calc_dev(base_price, price):
+    return 100 * (price - base_price) / base_price
 
-    # Initialiser les colonnes pour les pivots
-    df['pivot_high_value'] = np.nan
-    df['pivot_low_value'] = np.nan
+def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth):
+    highs, lows = calculate_pivots(prices_high, prices_low, depth)
 
-    last_pivot_high = None
-    last_pivot_low = None
+    zigzag = []
+    last_pivot = None
+    cumulative_volume = 0
 
-    for i in range(len(df)):
-        if pivot_high_mask.iloc[i]:
-            if last_pivot_low is not None and df['high'].iloc[i] >= 1.02 * last_pivot_low:
-                df['pivot_high_value'].iloc[i] = df['high'].iloc[i]
-                last_pivot_high = df['high'].iloc[i]
-            elif last_pivot_low is None:
-                df['pivot_high_value'].iloc[i] = df['high'].iloc[i]
-                last_pivot_high = df['high'].iloc[i]
+    for i in range(len(prices_high)):
+        if not np.isnan(highs[i]):
+            dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
+            if last_pivot is None or dev >= dev_threshold:
+                zigzag.append((i, highs[i], cumulative_volume))
+                last_pivot = highs[i]
+                cumulative_volume = 0
+        elif not np.isnan(lows[i]):
+            dev = calc_dev(last_pivot, lows[i]) if last_pivot is not None else np.inf
+            if last_pivot is None or dev <= -dev_threshold:
+                zigzag.append((i, lows[i], cumulative_volume))
+                last_pivot = lows[i]
+                cumulative_volume = 0
+        cumulative_volume += volumes.iloc[i]
 
-        if pivot_low_mask.iloc[i]:
-            if last_pivot_high is not None and df['low'].iloc[i] <= 0.98 * last_pivot_high:
-                df['pivot_low_value'].iloc[i] = df['low'].iloc[i]
-                last_pivot_low = df['low'].iloc[i]
-            elif last_pivot_high is None:
-                df['pivot_low_value'].iloc[i] = df['low'].iloc[i]
+    return zigzag
 
-    return df['pivot_high_value'], df['pivot_low_value']
+# Example usage with a DataFrame `df`
+def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
+    prices_high = df['high']
+    prices_low = df['low']
+    volumes = df['volume']
 
-df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5)
+    pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
+    df['pivot_high'] = pivots_high
+    df['pivot_low'] = pivots_low
 
-df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
-df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
+    zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
+    zigzag_df = pd.DataFrame(zigzag, columns=['index', 'price', 'cumulative_volume'])
+    
+    return df, zigzag_df
 
+df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=5, depth=2)
+
+print(df)
+print(zigzag_df)
 
 positions_data = bitget.get_open_position()
 position = [
