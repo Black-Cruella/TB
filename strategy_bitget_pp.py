@@ -25,7 +25,7 @@ account_to_select = "bitget_exemple"
 production = True
 
 pair = "AVAX/USDT:USDT"
-timeframe = "1m"
+timeframe = "3m"
 leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
@@ -37,7 +37,7 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_last_historical(pair, timeframe, 300)
+df = bitget.get_last_historical(pair, timeframe, 1000)
 
 import numpy as np
 
@@ -90,12 +90,22 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
 
     zigzag = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth)
     zigzag_df = pd.DataFrame(zigzag, columns=['index', 'price', 'cumulative_volume'])
+
+    df['last_zigzag_price'] = np.nan
+    df['second_last_zigzag_price'] = np.nan
+    
+    if len(zigzag) >= 2:
+        last_index, last_price, _ = zigzag[-1]
+        second_last_index, second_last_price, _ = zigzag[-2]
+
+        # Add the last and second last zigzag prices to the DataFrame
+        df.at[last_index, 'last_zigzag_price'] = last_price
+        df.at[second_last_index, 'second_last_zigzag_price'] = second_last_price
     
     return df, zigzag_df
 
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=5, depth=2)
 
-print(df)
 print(zigzag_df)
 
 positions_data = bitget.get_open_position()
@@ -110,7 +120,7 @@ row = df.iloc[-2]
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
-print(df.tail(150))
+print(df.tail(5))
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
