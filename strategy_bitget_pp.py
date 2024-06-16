@@ -104,7 +104,7 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     
     return df, zigzag_df
 
-df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=5, depth=2)
+df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=5, depth=1.5)
 
 print(zigzag_df)
 
