@@ -108,12 +108,12 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
 def add_signal_column(df):
     df['signal'] = 'WAITING'
     for i in range(1, len(df)):
-        if df['price'].iloc[i] != df['price'].iloc[i-1]:
-            df['signal'].iloc[i] = 'NEW POINT'
+        if df.loc[df.index[i], 'price'] != df.loc[df.index[i-1], 'price']:
+            df.loc[df.index[i], 'signal'] = 'NEW POINT'
     return df
 
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=1.5, depth=5)
-
+df = add_signal_column(df)
 
 
 positions_data = bitget.get_open_position()
