@@ -39,7 +39,9 @@ bitget = PerpBitget(
 # Get data
 df = bitget.get_last_historical(pair, timeframe, 100)
 
-def pivot_points_high_low(df, left, right, percent_threshold=2.0):
+import numpy as np
+
+def pivot_points_high_low(df, left, right):
     # Calcul des potential pivots highs
     highs = df['high'].rolling(window=left + right + 1, center=True).max()
     pivot_high_mask = (df['high'] == highs) & (df['high'].shift(left) != highs)
@@ -48,31 +50,32 @@ def pivot_points_high_low(df, left, right, percent_threshold=2.0):
     lows = df['low'].rolling(window=left + right + 1, center=True).min()
     pivot_low_mask = (df['low'] == lows) & (df['low'].shift(left) != lows)
 
-    percent_threshold /= 100.0  # Convertir en décimal pour le calcul
+    # Initialiser les colonnes pour les pivots
+    df['pivot_high_value'] = np.nan
+    df['pivot_low_value'] = np.nan
 
     last_pivot_high = None
     last_pivot_low = None
 
-    # Créer des listes pour stocker les valeurs des pivots validés
-    pivot_high_values = [np.nan] * len(df)
-    pivot_low_values = [np.nan] * len(df)
-
     for i in range(len(df)):
-        if pivot_high_mask[i]:
-            if last_pivot_low is None or (df['high'][i] >= last_pivot_low * (1 + percent_threshold)):
-                pivot_high_values[i] = df['high'][i]
-                last_pivot_high = df['high'][i]
-        if pivot_low_mask[i]:
-            if last_pivot_high is None or (df['low'][i] <= last_pivot_high * (1 - percent_threshold)):
-                pivot_low_values[i] = df['low'][i]
-                last_pivot_low = df['low'][i]
+        if pivot_high_mask.iloc[i]:
+            if last_pivot_low is not None and df['high'].iloc[i] >= 1.02 * last_pivot_low:
+                df['pivot_high_value'].iloc[i] = df['high'].iloc[i]
+                last_pivot_high = df['high'].iloc[i]
+            elif last_pivot_low is None:
+                df['pivot_high_value'].iloc[i] = df['high'].iloc[i]
+                last_pivot_high = df['high'].iloc[i]
 
-    df['pivot_high_value'] = pivot_high_values
-    df['pivot_low_value'] = pivot_low_values
+        if pivot_low_mask.iloc[i]:
+            if last_pivot_high is not None and df['low'].iloc[i] <= 0.98 * last_pivot_high:
+                df['pivot_low_value'].iloc[i] = df['low'].iloc[i]
+                last_pivot_low = df['low'].iloc[i]
+            elif last_pivot_high is None:
+                df['pivot_low_value'].iloc[i] = df['low'].iloc[i]
 
     return df['pivot_high_value'], df['pivot_low_value']
 
-df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5, percent_threshold=2.0)
+df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5)
 
 df['pivot_high_value'] = df['pivot_high_value'].fillna(method='ffill')
 df['pivot_low_value'] = df['pivot_low_value'].fillna(method='ffill')
