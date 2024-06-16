@@ -158,7 +158,7 @@ if len(position) > 0:
         if production:
             bitget.place_market_order(pair, 'buy', close_short_quantity, reduce=True)
 
-num_positions_open = len(positions)
+num_positions_open = len(position)
 if num_positions_open < 1:
     
         if row['signal'] == 'NEW POINT':
