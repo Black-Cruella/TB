@@ -62,7 +62,7 @@ def pivot_points_high_low(df, left, right, percent_threshold=2.0):
 
     return df['pivot_high_value'], df['pivot_low_value']
 
-df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5)
+df['pivot_high_value'], df['pivot_low_value'] = pivot_points_high_low(df, left=5, right=5, percent_threshold=2.0)
 
 positions_data = bitget.get_open_position()
 position = [
