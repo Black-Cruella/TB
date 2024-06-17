@@ -37,7 +37,7 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_last_historical(pair, timeframe, 1000)
+df = bitget.get_last_historical(pair, timeframe, 950)
 
 import numpy as np
 
@@ -165,8 +165,9 @@ if num_positions_open < 1:
             zigzag_price = row['price']
             
             if row['direction'] == 'GO LONG':
+                
                 long_quantity_in_usd = usd_balance * (leverage / 2)
-                long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / long_market_price))))
+                long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
                 exchange_long_quantity = long_quantity * long_market_price
                 print(f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
                 if production:
@@ -175,7 +176,7 @@ if num_positions_open < 1:
             elif row['direction'] == 'GO SHORT':
                 short_market_price = float(df.iloc[-1]["close"])
                 short_quantity_in_usd = usd_balance * (leverage / 2)
-                short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / short_market_price))))
+                short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / zigzag_price))))
                 exchange_short_quantity = short_quantity * short_market_price
                 print(f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_short_quantity, 2)}$")
                 if production:
