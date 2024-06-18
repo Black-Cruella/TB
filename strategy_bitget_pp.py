@@ -129,7 +129,7 @@ position = [
 open_orders = bitget.get_open_order(pair)
 order = [
     {"side": d["side"], "size": d["size"], "market_price":d["info"]["markPrice"]}
-    for d in positions_data if d["symbol"] == pair]
+    for d in open_orders if d["symbol"] == pair]
 print("Ordres ouverts :", order)
 
 usd_balance = float(bitget.get_usdt_equity())
