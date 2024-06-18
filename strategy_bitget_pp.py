@@ -37,7 +37,7 @@ bitget = PerpBitget(
 )
 
 # Get data
-df = bitget.get_last_historical(pair, timeframe, 950)
+df = bitget.get_last_historical(pair, timeframe, 900)
 
 import numpy as np
 
@@ -135,7 +135,7 @@ print("Ordres ouverts :", order)
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
-row = df.iloc[-2]
+row = df.iloc[-6]
 
 if len(position) > 0:
     position = position[0]
@@ -188,7 +188,7 @@ if num_orders_open < 1 and num_position_open < 1:
 print(zigzag_df)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
-print(df.tail(5))
+print(df.tail(10))
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
