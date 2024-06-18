@@ -127,7 +127,10 @@ position = [
     for d in positions_data if d["symbol"] == pair]
 
 open_orders = bitget.get_open_order()
-print("Ordres ouverts :", open_orders)
+order = [
+    {"side": d["side"], "size": d["size"], "market_price":d["info"]["markPrice"]}
+    for d in positions_data if d["symbol"] == pair]
+print("Ordres ouverts :", order)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
@@ -162,7 +165,8 @@ if len(position) > 0:
             bitget.place_market_order(pair, 'buy', close_short_quantity, reduce=True)
 
 num_orders_open = len(open_orders)
-if num_orders_open < 1:
+num_position_open = len(position)
+if num_orders_open < 1 and num_position_open < 1:
     zigzag_price = row['price']
     if row['direction'] == 'GO LONG':
         long_quantity_in_usd = usd_balance * leverage
