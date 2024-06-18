@@ -126,7 +126,7 @@ position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
-open_orders = bitget.get_open_order()
+open_orders = bitget.get_open_order(pair)
 order = [
     {"side": d["side"], "size": d["size"], "market_price":d["info"]["markPrice"]}
     for d in positions_data if d["symbol"] == pair]
