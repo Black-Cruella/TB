@@ -248,7 +248,8 @@ class PerpBitget():
     def cancel_open_order(self, symbol, order_id):
         try:
             return self._session.cancel_order(
-                order_id,
+                id=order_id,
+                symbol=symbol,
                 params = {
                     "productType": "USDT-FUTURES",
                 }
