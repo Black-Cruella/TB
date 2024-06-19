@@ -126,14 +126,6 @@ position = [
     {"side": d["side"], "size": float(d["contracts"]) * float(d["contractSize"]), "market_price":d["info"]["markPrice"], "usd_size": float(d["contracts"]) * float(d["contractSize"]) * float(d["info"]["markPrice"]), "open_price": d["entryPrice"]}
     for d in positions_data if d["symbol"] == pair]
 
-if len(positions_data) == 0:
-    df['entry_price'] = 0
-else:
-    position_info = positions_data[0]
-    entry_price = position_info['entryPrice']
-    df['entry_price'] = entry_price
-
-
 open_orders = bitget.get_open_order(pair)
 order = [
     {"side": d["side"], "size": d["size"], "market_price":d["info"]["markPrice"]}
@@ -143,12 +135,12 @@ print("Ordres ouverts :", order)
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
-row = df.iloc[-2]
+row = df.iloc[-6]
 
 if len(position) > 0:
     position = position[0]
     print(f"Current position : {position}")
-    if position["side"] == "long" and row["last_zigzag_price"] == entry_price:
+    if position["side"] == "long" and row["signal"] == "NEW POINT":
         close_long_market_price = float(df.iloc[-1]["close"])
         close_long_quantity = float(
             bitget.convert_amount_to_precision(pair, position["size"])
@@ -160,7 +152,7 @@ if len(position) > 0:
         if production:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
            
-    elif position["side"] == "short" and row["last_zigzag_price"] == entry_price:
+    elif position["side"] == "short" and row["signal"] == "NEW POINT":
         close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
             bitget.convert_amount_to_precision(pair, position["size"])
