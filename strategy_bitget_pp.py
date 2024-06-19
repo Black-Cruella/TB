@@ -161,7 +161,7 @@ if len(position) > 0:
             bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
            
     elif position["side"] == "short" and row["last_zigzag_price"] == entry_price:
-        zigzag_price = df.iloc[i]['price']
+        close_short_market_price = float(df.iloc[-1]["close"])
         close_short_quantity = float(
             bitget.convert_amount_to_precision(pair, position["size"])
         )
