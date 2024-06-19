@@ -135,7 +135,7 @@ print("Ordres ouverts :", order)
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
 for ord in open_orders:
     if float(ord['price']) == last_zigzag_price:
-        order_id = ord['orderId']
+        order_id = ord['id']
         bitget.cancel_open_order(pair, order_id)
 
 usd_balance = float(bitget.get_usdt_equity())
