@@ -150,67 +150,6 @@ class PerpBitget():
         except BaseException as err:
             raise Exception(err)
 
-    @authentication_required
-    def place_trailing_stop2(self, symbol, side, amount, trailingTriggerPrice, range_rate, reduce=True):
-        """
-        Place a trailing stop order to close an existing position.
-    
-        :param str symbol: Trading pair symbol (e.g., 'BTC/USDT')
-        :param str side: Order side ('buy' to close a short, 'sell' to close a long)
-        :param float amount: Amount to close
-        :param float trailingTriggerPrice: The price at which the trailing stop should be triggered
-        :param float range_rate: The trailing percentage
-        :param bool reduce: If the order should be reduce-only (default is True)
-        :return: Response from the order placement API
-        :rtype: dict
-        """
-        try:
-            # Fetch current positions
-            positions = self._session.fetch_positions()
-            
-            # Debug: print the positions to inspect their structure
-            print(f"Positions: {positions}")
-    
-            # Find the position for the given symbol
-            position = next((pos for pos in positions if pos['symbol'] == symbol), None)
-            
-            # Debug: print the position to inspect its structure
-            print(f"Position for {symbol}: {position}")
-            
-            if not position or 'contracts' not in position or float(position['contracts']) < amount:
-                raise Exception(f"No sufficient position to close for {symbol}. Required: {amount}, Available: {position['contracts'] if position else 0}")
-    
-            # Convert amounts and prices to the appropriate precision
-            amount_precision = self.convert_amount_to_precision(symbol, amount)
-            trailing_trigger_price_precision = self.convert_price_to_precision(symbol, trailingTriggerPrice)
-            range_rate_precision = self.convert_price_to_precision(symbol, range_rate)
-    
-            # Log the converted values
-            print(f"Amount (precision): {amount_precision}")
-            print(f"Trailing Trigger Price (precision): {trailing_trigger_price_precision}")
-            print(f"Range Rate (precision): {range_rate_precision}")
-    
-            # Prepare the order parameters
-            params = {
-                'trailingTriggerPrice': trailing_trigger_price_precision,
-                'rangeRate': range_rate_precision,
-                'triggerType': 'market_price',
-                'reduceOnly': reduce  # Ensure the order is to reduce the position
-            }
-    
-            # Log the params
-            print(f"Params: {params}")
-    
-            # Place the trailing stop order
-            return self._session.createOrder(
-                symbol=symbol,
-                type='market',
-                side=side,
-                amount=amount_precision,
-                params=params
-            )
-        except Exception as err:
-            raise Exception(f"An error occurred while placing the trailing stop order: {err}")
 
     @authentication_required
     def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate):
@@ -306,11 +245,11 @@ class PerpBitget():
             raise Exception("An error occured in cancel_order_by_id", err)
         
     @authentication_required
-    def cancel_all_open_order(self):
+    def cancel_open_order(self, symbol):
         try:
-            return self._session.cancel_all_orders(
+            return self._session.cancel_order(
                 params = {
-                    "marginCoin": "USDT",
+                    "productType": "USDT-FUTURES",
                 }
             )
         except BaseException as err:
