@@ -245,9 +245,10 @@ class PerpBitget():
             raise Exception("An error occured in cancel_order_by_id", err)
         
     @authentication_required
-    def cancel_open_order(self, symbol):
+    def cancel_open_order(self, symbol, order_id):
         try:
             return self._session.cancel_order(
+                order_id,
                 params = {
                     "productType": "USDT-FUTURES",
                 }
