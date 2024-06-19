@@ -128,14 +128,15 @@ position = [
 
 open_orders = bitget.get_open_order(pair)
 order = [
-    {"side": d["side"], "size": d["size"], "market_price":d["info"]["markPrice"]}
+    {"side": d["side"], "size": d["info"]["size"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
 print("Ordres ouverts :", order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
 for ord in open_orders:
-    if float(ord['market_price']) == last_zigzag_price:
-        bitget.cancel_open_order(symbol=pair)
+    if float(ord['price']) == last_zigzag_price:
+        order_id = ord['orderId']
+        bitget.cancel_open_order(pair, order_id)
 
 usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
