@@ -25,7 +25,7 @@ account_to_select = "bitget_exemple"
 production = True
 
 pair = "AVAX/USDT:USDT"
-timeframe = "3m"
+timeframe = "30m"
 leverage = 0.99
 
 print(f"--- {pair} {timeframe} Leverage x {leverage} ---")
@@ -114,10 +114,10 @@ def add_signal_column(df):
 
 def add_direction_column(df):
     df['direction'] = 'DIRECTION'
-    df['direction'] = np.where(df['price'] < df['last_zigzag_price'], 'GO LONG', 'GO SHORT')
+    df['direction'] = np.where(df['price'] > df['last_zigzag_price'], 'GO LONG', 'GO SHORT')
     return df
 
-df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=1.5, depth=5)
+df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=0.5, depth=12)
 df = add_signal_column(df)
 df = add_direction_column(df)
 
@@ -145,31 +145,7 @@ row = df.iloc[-6]
 
 if len(position) > 0:
     position = position[0]
-    print(f"Current position : {position}")
-    if position["side"] == "long" and row["signal"] == "NEW POINT":
-        close_long_market_price = float(df.iloc[-1]["close"])
-        close_long_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        exchange_close_long_quantity = close_long_quantity * close_long_market_price
-        print(
-            f"Place Close Long Market Order: {close_long_quantity} {pair[:-5]} at the price of {close_long_market_price}$ ~{round(exchange_close_long_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, "sell", close_long_quantity, reduce=True)
-           
-    elif position["side"] == "short" and row["signal"] == "NEW POINT":
-        close_short_market_price = float(df.iloc[-1]["close"])
-        close_short_quantity = float(
-            bitget.convert_amount_to_precision(pair, position["size"])
-        )
-        exchange_close_short_quantity = close_short_quantity * close_short_market_price
-        print(
-            f"Place Close Short Market Order: {close_short_quantity} {pair[:-5]} at the price of {close_short_market_price}$ ~{round(exchange_close_short_quantity, 2)}$"
-        )
-        if production:
-            bitget.place_market_order(pair, 'buy', close_short_quantity, reduce=True)
-
+    
 num_orders_open = len(open_orders)
 num_position_open = len(position)
 if num_orders_open < 1 and num_position_open < 1:
@@ -178,18 +154,29 @@ if num_orders_open < 1 and num_position_open < 1:
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
         exchange_long_quantity = long_quantity * zigzag_price
-        print(f"Place Open Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
+        print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
         if production:
             bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+         if production:
+            trailing_stop_price = zigzag_price * 1.001
+            rounded_price = round(trailing_stop_price, 3)
+            range_rate = 0.2  # 1% de suivi
+            print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
+            bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, range_rate)
+
+            stop_loss_price = short_market_price * 0.998  # 1% au-dessus du prix de vente
+            print(f"Place Short Stop Loss Order at {stop_loss_price}$")
+            bitget.place_market_stop_loss(pair, 'buy', short_quantity, stop_loss_price, reduce=True)
+
     
-    elif row['direction'] == 'GO SHORT':
-        short_market_price = float(df.iloc[-1]["close"])
-        short_quantity_in_usd = usd_balance * leverage
-        short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / zigzag_price))))
-        exchange_short_quantity = short_quantity * zigzag_price
-        print(f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_short_quantity, 2)}$")
-        if production:
-            bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
+#    elif row['direction'] == 'GO SHORT':
+#        short_market_price = float(df.iloc[-1]["close"])
+#        short_quantity_in_usd = usd_balance * leverage
+#        short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / zigzag_price))))
+#        exchange_short_quantity = short_quantity * zigzag_price
+#        print(f"Place Open Short Market Order: {short_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_short_quantity, 2)}$")
+#        if production:
+#            bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
 
 print(zigzag_df)
 pd.set_option('display.max_columns', None)
