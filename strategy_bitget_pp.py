@@ -111,18 +111,25 @@ position = [
     for d in positions_data if d["symbol"] == pair]
 
 open_orders = bitget.get_open_order(pair)
-print(open_orders)
 order = [
     {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
 print("Ordres ouverts :", order)
 
 TS_open_orders = bitget.get_TS_open_order(pair)
-print(TS_open_orders)
+if TS_open_orders is not None and 'data' in TS_open_orders:
+    TS_orders_data = TS_open_orders['data'].get('entrustedList', [])
+    if TS_orders_data is None:
+        TS_orders_data = []
+else:
+    TS_orders_data = []
+
 TS_order = [
     {"side": d["side"], "size": d["size"], "Id": d["orderId"], "trigger_price": d["triggerPrice"]}
-    for d in TS_open_orders if d["symbol"] == pair]
-print("Trailings ouverts :", TS_order)
+    for d in TS_orders_data
+]
+TS_order_Id = [d["orderId"] for d in TS_orders_data]
+print("Trailing ouvert :", TS_order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
 for ord in open_orders:
@@ -134,11 +141,18 @@ usd_balance = float(bitget.get_usdt_equity())
 print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-13]
-    
+
 num_orders_open = len(open_orders)
-num_TS_orders_open = len(TS_open_orders)
-print(num_TS_orders_open)
+num_TS_orders_open = len(TS_order)
 num_position_open = len(position)
+
+#Annuler les Trailings
+if num_position_open < 1:
+    for ts_order_id in TS_order_Id:
+        bitget.cancel_TS_open_order('AVAXUSDT', ts_order_id)
+        print(f"Trailing stop order {ts_order_id} canceled due to main position closure.")
+
+#Placer de nouveaux ordres
 if num_orders_open < 1 and num_position_open < 1:
     zigzag_price = row['price']
     long_quantity_in_usd = usd_balance * leverage
@@ -156,13 +170,15 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
+
+#Ouvrir le TS et SL
 if num_TS_orders_open < 1 and num_position_open == 1:
     long_quantity_in_usd = usd_balance * leverage
     long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
 
     trailing_stop_price = entry_price * 1.001
     rounded_price = round(trailing_stop_price, 3)
-    trailingPercent = 0.2  # 1% de suivi
+    trailingPercent = 0.25  # 1% de suivi
     print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
     bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
 
@@ -173,7 +189,7 @@ if num_TS_orders_open < 1 and num_position_open == 1:
 
 
 
-    
+
 #    elif row['direction'] == 'GO SHORT':
 #        short_market_price = float(df.iloc[-1]["close"])
 #        short_quantity_in_usd = usd_balance * leverage
