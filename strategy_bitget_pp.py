@@ -119,7 +119,7 @@ print("Ordres ouverts :", order)
 TS_open_orders = bitget.get_TS_open_order(pair)
 TS_order = [
     {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
-    for d in TS_open_orders if d["symbol"] == pair]
+    for d in TS_open_orders ]
 print("Trailings ouverts :", TS_order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
