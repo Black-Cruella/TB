@@ -167,8 +167,9 @@ if num_TS_orders_open < 1 and num_position_open == 1:
     bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
 
     stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
+    SL_rounded_price = round(stop_loss_price, 3)
     print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
+    bitget.place_market_stop_loss('AVAXUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
 
 
 
