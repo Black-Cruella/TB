@@ -117,10 +117,10 @@ order = [
 print("Ordres ouverts :", order)
 
 TS_open_orders = bitget.get_TS_open_order(pair)
-order = [
+Ts_order = [
     {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
-print("Trailings ouverts :", order)
+print("Trailings ouverts :", TS_order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
 for ord in open_orders:
@@ -134,6 +134,7 @@ print("USD balance :", round(usd_balance, 2), "$")
 row = df.iloc[-13]
     
 num_orders_open = len(open_orders)
+num_TS_orders_open = len(TS_open_orders)
 num_position_open = len(position)
 if num_orders_open < 1 and num_position_open < 1:
     zigzag_price = row['price']
@@ -152,14 +153,14 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-if num_orders_open < 1 and num_position_open == 1:
+if TS_open_orders < 1 and num_position_open == 1:
     long_quantity_in_usd = usd_balance * leverage
     long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
 
     trailing_stop_price = entry_price * 1.001
     rounded_price = round(trailing_stop_price, 3)
     trailingPercent = 0.2  # 1% de suivi
-    print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
+    print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
     bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
 
     stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
