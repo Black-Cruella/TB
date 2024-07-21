@@ -153,23 +153,26 @@ class PerpBitget():
 
     @authentication_required
     def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate):
-
+        
         try:
-            return self._session.privateMixPostV2MixOrderPlaceTpslOrder(
+            return self._session.privateMixPostV2MixOrderPlacePlanOrder(
                 params={
                     'marginCoin': 'USDT',
                     'productType': 'usdt-futures',
+                    'marginMode' : 'isolated',
+                    'orderType' : 'market',
                     'symbol': symbol,
                     'size': self.convert_amount_to_precision(symbol, amount),
-                    'planType': 'moving_plan',
+                    'planType': 'track_plan',
                     'triggerPrice': trailingTriggerPrice,
                     'triggerType': 'mark_price',
-                    'holdSide': side,
+                    'side': side,
                     'rangeRate': range_rate,
                 }
             )
         except BaseException as err:
             raise Exception(err)
+
 
     @authentication_required
     def get_balance_of_one_coin(self, coin):
