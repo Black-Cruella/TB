@@ -132,17 +132,21 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_market_stop_loss(self, symbol, side, amount, trigger_price, reduce=False):
-        
+    def place_market_stop_loss(self, symbol, holdSide, amount, trigger_price, reduce=False):
+
         try:
             return self._session.privateMixPostV2MixOrderPlaceTpslOrder(
-                symbol, 
-                'market', 
-                side, 
-                self.convert_amount_to_precision(symbol, amount), 
-                self.convert_price_to_precision(symbol, trigger_price),
                 params = {
-                    'stopLossPrice': self.convert_price_to_precision(symbol, trigger_price),  # your stop price
+                    'marginCoin': 'USDT',
+                    'productType': 'usdt-futures',
+                    'marginMode' : 'isolated',
+                    'orderType' : 'market',
+                    'symbol': symbol,
+                    'planType': 'loss_plan',
+                    'holdSide': holdSide,
+                    'size': self.convert_amount_to_precision(symbol, amount),
+                    'planType': 'pos_loss',
+                    'triggerPrice': self.convert_price_to_precision(symbol, trigger_price),
                     "triggerType": "mark_price",
                     "reduceOnly": reduce
                 }
