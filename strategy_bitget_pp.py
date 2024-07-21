@@ -103,18 +103,6 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     
     return df, zigzag_df
 
-def add_signal_column(df):
-    df['signal'] = 'WAITING'
-    for i in range(1, len(df)):
-        if df.loc[df.index[i], 'price'] != df.loc[df.index[i-1], 'price']:
-            df.loc[df.index[i], 'signal'] = 'NEW POINT'
-    return df
-
-def add_direction_column(df):
-    df['direction'] = 'DIRECTION'
-    df['direction'] = np.where(df['price'] > df['last_zigzag_price'], 'GO LONG', 'GO SHORT')
-    return df
-
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=0.5, depth=12)
 df = add_signal_column(df)
 df = add_direction_column(df)
@@ -159,13 +147,12 @@ num_orders_open = len(open_orders)
 num_position_open = len(position)
 if num_orders_open < 1 and num_position_open < 1:
     zigzag_price = row['price']
-    if row['direction'] == 'GO LONG':
-        long_quantity_in_usd = usd_balance * leverage
-        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
-        exchange_long_quantity = long_quantity * zigzag_price
-        print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
-        if production:
-            bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+    long_quantity_in_usd = usd_balance * leverage
+    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
+    exchange_long_quantity = long_quantity * zigzag_price
+    print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
+    if production:
+        bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
 
 
 
