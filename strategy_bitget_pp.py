@@ -117,7 +117,7 @@ order = [
 print("Ordres ouverts :", order)
 
 TS_open_orders = bitget.get_TS_open_order(pair)
-Ts_order = [
+TS_order = [
     {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
 print("Trailings ouverts :", TS_order)
