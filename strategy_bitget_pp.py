@@ -112,7 +112,7 @@ position = [
 
 open_orders = bitget.get_open_order(pair)
 order = [
-    {"side": d["side"], "size": d["info"]["size"], "market_price":d["info"]["price"]}
+    {"side": d["side"], "size": d["info"]["size"], "Id": d["orderId"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
 print("Ordres ouverts :", order)
 
