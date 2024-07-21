@@ -173,6 +173,18 @@ class PerpBitget():
         except BaseException as err:
             raise Exception(err)
 
+    def get_TS_open_order(self, symbol):
+        
+        try:
+            return self._session.privateMixGetV2MixOrderOrdersPlanPending(
+                params={
+                    'planType': 'track_plan',
+                }
+            )
+        except BaseException as err:
+            raise Exception(err)
+
+
 
     @authentication_required
     def get_balance_of_one_coin(self, coin):
