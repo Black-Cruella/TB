@@ -146,26 +146,20 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-# Ajouter la quantité
-if len(positions_data) == 0:
-    df['open_qty'] = None
-else:
-    position_info = positions_data[0]
-    open_qty = position_info['size']
-    df['open_qty'] = open_qty
-
-
 if num_orders_open < 1 and num_position_open > 1:
+    long_quantity_in_usd = usd_balance * leverage
+    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entryPrice))))
+    
     position = position[0]
     trailing_stop_price = entry_price * 1.001
     rounded_price = round(trailing_stop_price, 3)
     range_rate = 0.2  # 1% de suivi
     print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {range_rate}")
-    bitget.place_trailing_stop('AVAXUSDT', 'sell', open_qty, rounded_price, range_rate)
+    bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, range_rate)
 
     stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
     print(f"Place Short Stop Loss Order at {stop_loss_price}$")
-    bitget.place_market_stop_loss(pair, 'sell', open_qty, stop_loss_price, reduce=True)
+    bitget.place_market_stop_loss(pair, 'sell', long_quantity, stop_loss_price, reduce=True)
 
 
 
