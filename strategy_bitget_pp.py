@@ -111,16 +111,17 @@ position = [
     for d in positions_data if d["symbol"] == pair]
 
 open_orders = bitget.get_open_order(pair)
+print(open_orders)
 order = [
     {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
     for d in open_orders if d["symbol"] == pair]
 print("Ordres ouverts :", order)
 
 TS_open_orders = bitget.get_TS_open_order(pair)
-TS_orders_data = TS_open_orders.get('data', {}).get('entrustedList', [])
+print(TS_open_orders)
 TS_order = [
     {"side": d["side"], "size": d["size"], "Id": d["orderId"], "trigger_price": d["triggerPrice"]}
-    for d in TS_orders_data if d["symbol"] == pair]
+    for d in TS_open_orders if d["symbol"] == pair]
 print("Trailings ouverts :", TS_order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
