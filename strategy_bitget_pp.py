@@ -104,8 +104,6 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     return df, zigzag_df
 
 df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=0.5, depth=12)
-df = add_signal_column(df)
-df = add_direction_column(df)
 
 positions_data = bitget.get_open_position()
 position = [
