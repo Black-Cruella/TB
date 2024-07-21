@@ -155,7 +155,7 @@ else:
     df['open_qty'] = open_qty
 
 
-if len(position) > 0:
+if num_orders_open < 1 and num_position_open > 1:
     position = position[0]
     trailing_stop_price = entry_price * 1.001
     rounded_price = round(trailing_stop_price, 3)
