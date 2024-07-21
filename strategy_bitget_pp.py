@@ -146,7 +146,7 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-if num_orders_open < 1 and num_position_open > 1:
+if num_orders_open < 1 and num_position_open = 1:
     long_quantity_in_usd = usd_balance * leverage
     long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entryPrice))))
     
