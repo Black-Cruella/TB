@@ -146,11 +146,10 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-if num_orders_open < 1 and num_position_open = 1:
+if num_orders_open < 1 and num_position_open == 1:
     long_quantity_in_usd = usd_balance * leverage
-    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entryPrice))))
-    
-    position = position[0]
+    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
+
     trailing_stop_price = entry_price * 1.001
     rounded_price = round(trailing_stop_price, 3)
     range_rate = 0.2  # 1% de suivi
