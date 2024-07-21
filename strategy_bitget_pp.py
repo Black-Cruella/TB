@@ -117,10 +117,11 @@ order = [
 print("Ordres ouverts :", order)
 
 TS_open_orders = bitget.get_TS_open_order(pair)
-TS_order = [
-    {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
-    for d in open_orders if d["symbol"] == pair]
-print("Trailings ouverts :", TS_order)
+print({TS_open_orders})
+#TS_order = [
+#    {"side": d["side"], "size": d["info"]["size"], "Id": d["id"], "market_price":d["info"]["price"]}
+#    for d in open_orders if d["symbol"] == pair]
+#print("Trailings ouverts :", TS_order)
 
 last_zigzag_price = df.iloc[-1]['last_zigzag_price']
 for ord in open_orders:
@@ -153,7 +154,7 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-if TS_open_orders < 1 and num_position_open == 1:
+if num_TS_orders_open < 1 and num_position_open == 1:
     long_quantity_in_usd = usd_balance * leverage
     long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
 
