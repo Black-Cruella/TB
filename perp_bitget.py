@@ -152,7 +152,7 @@ class PerpBitget():
 
 
     @authentication_required
-    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, range_rate):
+    def place_trailing_stop(self, symbol, side, amount, trailingTriggerPrice, trailingPercent):
         
         try:
             return self._session.privateMixPostV2MixOrderPlacePlanOrder(
@@ -167,7 +167,7 @@ class PerpBitget():
                     'triggerPrice': trailingTriggerPrice,
                     'triggerType': 'mark_price',
                     'side': side,
-                    'rangeRate': range_rate,
+                    'trailingPercent': trailingPercent,
                 }
             )
         except BaseException as err:
