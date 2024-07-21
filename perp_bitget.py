@@ -135,14 +135,14 @@ class PerpBitget():
     def place_market_stop_loss(self, symbol, side, amount, trigger_price, reduce=False):
         
         try:
-            return self._session.createOrder(
+            return self._session.privateMixPostV2MixOrderPlaceTpslOrder(
                 symbol, 
                 'market', 
                 side, 
                 self.convert_amount_to_precision(symbol, amount), 
                 self.convert_price_to_precision(symbol, trigger_price),
                 params = {
-                    'stopPrice': self.convert_price_to_precision(symbol, trigger_price),  # your stop price
+                    'stopLossPrice': self.convert_price_to_precision(symbol, trigger_price),  # your stop price
                     "triggerType": "mark_price",
                     "reduceOnly": reduce
                 }
@@ -178,6 +178,7 @@ class PerpBitget():
         try:
             return self._session.privateMixGetV2MixOrderOrdersPlanPending(
                 params={
+                    'productType': 'usdt-futures',
                     'planType': 'track_plan',
                 }
             )
