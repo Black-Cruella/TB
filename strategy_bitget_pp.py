@@ -156,12 +156,18 @@ if num_position_open < 1:
 #Placer de nouveaux ordres
 if num_orders_open < 1 and num_position_open < 1:
     zigzag_price = row['price']
-    long_quantity_in_usd = usd_balance * leverage
-    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
-    exchange_long_quantity = long_quantity * zigzag_price
-    print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
-    if production:
-        bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+    RT_high = RT_df.iloc[-2]['high']
+    RT_low = RT_df.iloc[-2]['low']
+
+    if RT_low <= zigzag_price <= RT_high:
+        long_quantity_in_usd = usd_balance * leverage
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
+        exchange_long_quantity = long_quantity * zigzag_price
+        print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
+        if production:
+            bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+    else:
+        print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
 
 # Ajouter le Open Price
 if len(positions_data) == 0:
@@ -204,11 +210,7 @@ print(zigzag_df)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 print(df.tail(10))
-
-print(RT_df)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-print(df.tail(10))
+print(RT_df.tail(10))
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
