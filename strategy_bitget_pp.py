@@ -38,6 +38,7 @@ bitget = PerpBitget(
 
 # Get data
 df = bitget.get_last_historical(pair, timeframe, 900)
+RT_df = bitget.get_last_historical(pair, "1m", 60)
 
 def calculate_pivots(prices_high, prices_low, depth):
     pivots_high = [np.nan] * len(prices_high)
@@ -200,6 +201,11 @@ if num_TS_orders_open < 1 and num_position_open == 1:
 #            bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
 
 print(zigzag_df)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+print(df.tail(10))
+
+print(RT_df)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 print(df.tail(10))
