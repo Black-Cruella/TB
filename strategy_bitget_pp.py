@@ -200,7 +200,7 @@ if HL_direction == 'high' :
                 bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
                 status = 'used'
         else:
-            print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+            print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
     
     #Ouvrir le TS et SL
     if num_TS_orders_open < 1 and num_position_open == 1:
@@ -233,7 +233,7 @@ elif HL_direction == 'low' :
                     bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
                     status = 'used'
             else:
-                print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+                print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
         
         #Ouvrir le TS et SL
     if num_TS_orders_open < 1 and num_position_open == 1:
