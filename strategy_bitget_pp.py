@@ -96,16 +96,11 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     volumes = df['volume']
     timestamps = df.index
 
-    pivots_high, pivots_low = calculate_pivots(prices_high, prices_low, depth)
-    df['pivot_high'] = pivots_high
-    df['pivot_low'] = pivots_low
-
     zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, timestamps)
 
     df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
     df.drop(columns=['cumulative_volume'], inplace=True)
-    df['pivot_high'] = df['pivot_high'].fillna(method='ffill')
-    df['pivot_low'] = df['pivot_low'].fillna(method='ffill')
+    df.drop(columns=['H/L'], inplace=True)
     df['price'] = df['price'].fillna(method='ffill')
     # Add new columns if needed
     df['last_zigzag_price'] = zigzag_df['price'].shift(1)
@@ -174,23 +169,6 @@ if num_position_open < 1:
         bitget.cancel_TS_open_order('AVAXUSDT', ts_order_id)
         print(f"Trailing stop order {ts_order_id} canceled due to main position closure.")
 
-#Placer de nouveaux ordres
-if num_orders_open < 1 and num_position_open < 1 and not status:
-    zigzag_price = row['price']
-    RT_high = RT_df.iloc[-2]['high']
-    RT_low = RT_df.iloc[-2]['low']
-
-    if RT_low <= zigzag_price <= RT_high:
-        long_quantity_in_usd = usd_balance * leverage
-        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
-        exchange_long_quantity = long_quantity * zigzag_price
-        print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
-        if production:
-            bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
-            status = True
-    else:
-        print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
-
 # Ajouter le Open Price
 if len(positions_data) == 0:
     df['entry_price'] = None
@@ -199,22 +177,39 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-
-#Ouvrir le TS et SL
-if num_TS_orders_open < 1 and num_position_open == 1:
-    long_quantity_in_usd = usd_balance * leverage
-    long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
-
-    trailing_stop_price = entry_price * 1.001
-    rounded_price = round(trailing_stop_price, 3)
-    trailingPercent = 0.25  # 1% de suivi
-    print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
-    bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
-
-    stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
-    SL_rounded_price = round(stop_loss_price, 3)
-    print(f"Place Short Stop Loss Order at {SL_rounded_price}$")
-    bitget.place_market_stop_loss('AVAXUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
+#Placer de nouveaux ordres
+if zigzag_df.iloc[-1]['high']
+    if num_orders_open < 1 and num_position_open < 1 and not status:
+        zigzag_price = row['price']
+        RT_high = RT_df.iloc[-2]['high']
+        RT_low = RT_df.iloc[-2]['low']
+    
+        if RT_low <= zigzag_price <= RT_high:
+            long_quantity_in_usd = usd_balance * leverage
+            long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
+            exchange_long_quantity = long_quantity * zigzag_price
+            print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
+            if production:
+                bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+                status = True
+        else:
+            print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+    
+    #Ouvrir le TS et SL
+    if num_TS_orders_open < 1 and num_position_open == 1:
+        long_quantity_in_usd = usd_balance * leverage
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
+    
+        trailing_stop_price = entry_price * 1.001
+        rounded_price = round(trailing_stop_price, 3)
+        trailingPercent = 0.25  # 1% de suivi
+        print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
+        bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
+    
+        stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
+        SL_rounded_price = round(stop_loss_price, 3)
+        print(f"Place Short Stop Loss Order at {SL_rounded_price}$")
+        bitget.place_market_stop_loss('AVAXUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
 
 
 
