@@ -236,20 +236,20 @@ elif HL_direction == 'low' :
                 print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
         
         #Ouvrir le TS et SL
-        if num_TS_orders_open < 1 and num_position_open == 1:
-            short_quantity_in_usd = usd_balance * leverage
-            short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / entry_price))))
+    if num_TS_orders_open < 1 and num_position_open == 1:
+        short_quantity_in_usd = usd_balance * leverage
+        short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / entry_price))))
         
-            trailing_stop_price = entry_price * 0.999
-            rounded_price = round(trailing_stop_price, 3)
-            trailingPercent = 0.25  # 1% de suivi
-            print(f"Place long Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
-            bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, trailingPercent)
+        trailing_stop_price = entry_price * 0.999
+        rounded_price = round(trailing_stop_price, 3)
+        trailingPercent = 0.25  # 1% de suivi
+        print(f"Place long Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
+        bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, trailingPercent)
         
-            stop_loss_price = entry_price * 1.002  # 1% au-dessus du prix de vente
-            SL_rounded_price = round(stop_loss_price, 3)
-            print(f"Place long Stop Loss Order at {SL_rounded_price}$")
-            bitget.place_market_stop_loss('AVAXUSDT', 'sell', short_quantity, SL_rounded_price, reduce=True)
+        stop_loss_price = entry_price * 1.002  # 1% au-dessus du prix de vente
+        SL_rounded_price = round(stop_loss_price, 3)
+        print(f"Place long Stop Loss Order at {SL_rounded_price}$")
+        bitget.place_market_stop_loss('AVAXUSDT', 'sell', short_quantity, SL_rounded_price, reduce=True)
 
 
 print(zigzag_df.tail(10))
