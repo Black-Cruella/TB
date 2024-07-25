@@ -42,12 +42,17 @@ RT_df = bitget.get_last_historical(pair, "1m", 60)
 
 try:
     with open('./TBPP/status.txt', 'r') as file:
-        status = file.read() == 'True'
-        if status = True
+        status = file.read().strip()
+        if status == 'used':
             print("Status is: used, waiting for new point")
+        else:
+            print("Status is: unused, waiting for execution")
 except FileNotFoundError:
-    status = False
-print("Status is: unused, waiting for execution")
+    status = 'unused'
+    print("Status file not found. Status is: unused, waiting for execution")
+except Exception as e:
+    print(f"An error occurred: {e}")
+    status = 'unused'
 
 
 def calculate_pivots(prices_high, prices_low, depth):
@@ -157,7 +162,7 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-13]
 if row["signal"] == "NEW POINT":
-    status = False
+    status = 'unused'
 
 
 num_orders_open = len(open_orders)
@@ -193,7 +198,7 @@ if HL_direction == 'high' :
             print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
             if production:
                 bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
-                status = True
+                status = 'used'
         else:
             print(f"Zigzag price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
     
