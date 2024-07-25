@@ -177,8 +177,9 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
+HL_direction = zigzag_df.iloc[-1]['H/L']
 #Placer de nouveaux ordres
-if zigzag_df.iloc[-1]['high']:
+if HL_direction == 'high' :
     if num_orders_open < 1 and num_position_open < 1 and not status:
         zigzag_price = row['price']
         RT_high = RT_df.iloc[-2]['high']
