@@ -73,7 +73,7 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, tim
         if not np.isnan(highs[i]):
             dev = calc_dev(last_pivot, highs[i]) if last_pivot is not None else np.inf
             if last_pivot is None or dev >= dev_threshold:
-                zigzag.append((timestamps[i], highs[i], cumulative_volume))
+                zigzag.append((timestamps[i], highs[i], cumulative_volume, 'high'))
                 last_pivot = highs[i]
                 cumulative_volume = 0
         elif not np.isnan(lows[i]):
@@ -84,7 +84,7 @@ def calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, tim
                 cumulative_volume = 0
         cumulative_volume += volumes.iloc[i]
 
-    zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume'])
+    zigzag_df = pd.DataFrame(zigzag, columns=['timestamp', 'price', 'cumulative_volume', 'H/L'])
     zigzag_df.set_index('timestamp', inplace=True)
 
     return zigzag_df
