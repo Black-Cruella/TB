@@ -228,9 +228,7 @@ if num_TS_orders_open < 1 and num_position_open == 1:
 #        if production:
 #            bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
 
-print(zigzag_df)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+print(zigzag_df.tail(10))
 print(df.tail(10))
 print(RT_df.tail(10))
 
