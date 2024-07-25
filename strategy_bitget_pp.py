@@ -41,7 +41,7 @@ df = bitget.get_last_historical(pair, timeframe, 900)
 RT_df = bitget.get_last_historical(pair, "1m", 60)
 
 try:
-    with open('status.txt', 'r') as file:
+    with open('./TBPP/status.txt', 'r') as file:
         status = file.read() == 'True'
         if status = True
             print("Status is: used, waiting for new point")
@@ -229,7 +229,7 @@ print(zigzag_df.tail(10))
 print(df.tail(10))
 print(RT_df.tail(10))
 
-with open('status.txt', 'w') as file:
+with open('./TBPP/status.txt', 'w') as file:
     file.write(str(status))
 
 now = datetime.now()
