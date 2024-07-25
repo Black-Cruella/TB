@@ -43,7 +43,8 @@ RT_df = bitget.get_last_historical(pair, "1m", 60)
 try:
     with open('status.txt', 'r') as file:
         status = file.read() == 'True'
-        print("Status is: used, waiting for new point")
+        if status = True
+            print("Status is: used, waiting for new point")
 except FileNotFoundError:
     status = False
 print("Status is: unused, waiting for execution")
