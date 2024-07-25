@@ -178,7 +178,7 @@ else:
     df['entry_price'] = entry_price
 
 #Placer de nouveaux ordres
-if zigzag_df.iloc[-1]['high']
+if zigzag_df.iloc[-1]['high']:
     if num_orders_open < 1 and num_position_open < 1 and not status:
         zigzag_price = row['price']
         RT_high = RT_df.iloc[-2]['high']
