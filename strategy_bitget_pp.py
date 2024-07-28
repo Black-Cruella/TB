@@ -41,18 +41,32 @@ df = bitget.get_last_historical(pair, timeframe, 900)
 RT_df = bitget.get_last_historical(pair, "1m", 60)
 
 try:
-    with open('./TBPP/status.txt', 'r') as file:
-        status = file.read().strip()
-        if status == 'used':
-            print("Status is: used, waiting for new point")
+    with open('./TBPP/hp_status.txt', 'r') as file:
+        hp_status = file.read().strip()
+        if hp_status == 'used':
+            print("HP Status is: used, waiting for new point")
         else:
-            print("Status is: unused, waiting for execution")
+            print("HP Status is: unused, waiting for execution")
 except FileNotFoundError:
-    status = 'unused'
+    hp_status = 'unused'
     print("Status file not found. Status is: unused, waiting for execution")
 except Exception as e:
     print(f"An error occurred: {e}")
-    status = 'unused'
+    hp_status = 'unused'
+
+try:
+    with open('./TBPP/lp_status.txt', 'r') as file:
+        lp_status = file.read().strip()
+        if lp_status == 'used':
+            print("LP Status is: used, waiting for new point")
+        else:
+            print("LP Status is: unused, waiting for execution")
+except FileNotFoundError:
+    lp_status = 'unused'
+    print("Status file not found. Status is: unused, waiting for execution")
+except Exception as e:
+    print(f"An error occurred: {e}")
+    lp_status = 'unused'
 
 
 def calculate_pivots(prices_high, prices_low, depth):
@@ -103,7 +117,8 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     timestamps = df.index
 
     zigzag_df = calculate_zigzag(prices_high, prices_low, volumes, dev_threshold, depth, timestamps)
-
+    hp_df = zigzag_df[zigzag_df['H/L'] == 'high'].drop(columns=['H/L'])
+    lp_df = zigzag_df[zigzag_df['H/L'] == 'low'].drop(columns=['H/L'])
     df = pd.merge(df, zigzag_df, left_index=True, right_index=True, how='left')
     df.drop(columns=['cumulative_volume'], inplace=True)
     df.drop(columns=['H/L'], inplace=True)
@@ -112,7 +127,7 @@ def add_pivots_and_zigzag_to_df(df, dev_threshold, depth):
     df['last_zigzag_price'] = zigzag_df['price'].shift(1)
     df['last_zigzag_price'] = df['last_zigzag_price'].fillna(method='ffill')
     
-    return df, zigzag_df
+    return df, zigzag_df, hp_df, lp_df
 
 def add_signal_column(df):
     df['signal'] = 'WAITING'
@@ -121,7 +136,7 @@ def add_signal_column(df):
             df.loc[df.index[i], 'signal'] = 'NEW POINT'
     return df
 
-df, zigzag_df = add_pivots_and_zigzag_to_df(df, dev_threshold=0.5, depth=12)
+df, zigzag_df, hp_df, lp_df = add_pivots_and_zigzag_to_df(df, dev_threshold=0.5, depth=12)
 df = add_signal_column(df)
 
 
@@ -162,8 +177,10 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-13]
 if row["signal"] == "NEW POINT":
-    status = 'unused'
-
+    if row['price'] == hp_df.iloc[-1]['price']
+        hp_status = 'unused'
+    if row['price'] == lp_df.iloc[-1]['price']
+        lp_status = 'unused'
 
 num_orders_open = len(open_orders)
 num_TS_orders_open = len(TS_order)
@@ -183,59 +200,65 @@ else:
     entry_price = position_info['entryPrice']
     df['entry_price'] = entry_price
 
-HL_direction = zigzag_df.iloc[-1]['H/L']
-#Placer de nouveaux ordres
-if HL_direction == 'high' :
-    if num_orders_open < 1 and num_position_open < 1 and status == 'unused':
-        zigzag_price = row['price']
-        RT_high = RT_df.iloc[-2]['high']
-        RT_low = RT_df.iloc[-2]['low']
+if len(positions_data) == 0:
+    df['side'] = None
+else :
+    position_info = positions_data[0]
+    side = position_info['side']
+    df['side'] = side
+
+
+if num_orders_open < 1 and num_position_open < 1 and hp_status == 'unused':
+    zigzag_price = hp_df.iloc[-1]['high']
+    RT_high = RT_df.iloc[-2]['high']
+    RT_low = RT_df.iloc[-2]['low']
     
-        if RT_low <= zigzag_price <= RT_high:
-            long_quantity_in_usd = usd_balance * leverage
-            long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
-            exchange_long_quantity = long_quantity * zigzag_price
-            print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
-            if production:
-                bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
-                status = 'used'
-        else:
-            print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+    if RT_low <= zigzag_price <= RT_high:
+        long_quantity_in_usd = usd_balance * leverage
+        long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / zigzag_price))))
+        exchange_long_quantity = long_quantity * zigzag_price
+        print(f"Place Limit Long Market Order: {long_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_long_quantity, 2)}$")
+        if production:
+            bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
+            hp_status = 'used'
+    else:
+        print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
     
     #Ouvrir le TS et SL
+if position["side"] == "long"
     if num_TS_orders_open < 1 and num_position_open == 1:
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
-    
+        
         trailing_stop_price = entry_price * 1.001
         rounded_price = round(trailing_stop_price, 3)
         trailingPercent = 0.25  # 1% de suivi
         print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
         bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
-    
+        
         stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
         SL_rounded_price = round(stop_loss_price, 3)
         print(f"Place Short Stop Loss Order at {SL_rounded_price}$")
         bitget.place_market_stop_loss('AVAXUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
 
-elif HL_direction == 'low' :
-    if num_orders_open < 1 and num_position_open < 1 and status == 'unused':
-            zigzag_price = row['price']
-            RT_high = RT_df.iloc[-2]['high']
-            RT_low = RT_df.iloc[-2]['low']
+
+if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
+        zigzag_price = lp_df.iloc[-1]['high']
+        RT_high = RT_df.iloc[-2]['high']
+        RT_low = RT_df.iloc[-2]['low']
         
-            if RT_low <= zigzag_price <= RT_high:
-                short_quantity_in_usd = usd_balance * leverage
-                short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / zigzag_price))))
-                exchange_short_quantity = short_quantity * zigzag_price
-                print(f"Place Limit short Market Order: {short_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_short_quantity, 2)}$")
-                if production:
-                    bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
-                    status = 'used'
-            else:
-                print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+        if RT_low <= zigzag_price <= RT_high:
+            short_quantity_in_usd = usd_balance * leverage
+            short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / zigzag_price))))
+            exchange_short_quantity = short_quantity * zigzag_price
+            print(f"Place Limit short Market Order: {short_quantity} {pair[:-5]} at the price of {zigzag_price}$ ~{round(exchange_short_quantity, 2)}$")
+            if production:
+                bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
+                lp_status = 'used'
+        else:
+            print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
         
-        #Ouvrir le TS et SL
+if position["side"] == "short"
     if num_TS_orders_open < 1 and num_position_open == 1:
         short_quantity_in_usd = usd_balance * leverage
         short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / entry_price))))
@@ -252,12 +275,17 @@ elif HL_direction == 'low' :
         bitget.place_market_stop_loss('AVAXUSDT', 'sell', short_quantity, SL_rounded_price, reduce=True)
 
 
-print(zigzag_df.tail(10))
+print(hp_df.tail(10))
+print(lp_df.tail(10))
 print(df.tail(10))
 print(RT_df.tail(10))
 
-with open('./TBPP/status.txt', 'w') as file:
-    file.write(str(status))
+with open('./TBPP/hp_status.txt', 'w') as file:
+    file.write(str(hp_status))
+
+with open('./TBPP/lp_status.txt', 'w') as file:
+    file.write(str(lp_status))
+
 
 now = datetime.now()
 current_time = now.strftime("%d/%m/%Y %H:%M:%S")
