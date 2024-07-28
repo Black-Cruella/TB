@@ -177,9 +177,9 @@ print("USD balance :", round(usd_balance, 2), "$")
 
 row = df.iloc[-13]
 if row["signal"] == "NEW POINT":
-    if row['price'] == hp_df.iloc[-1]['price']
+    if row['price'] == hp_df.iloc[-1]['price']:
         hp_status = 'unused'
-    if row['price'] == lp_df.iloc[-1]['price']
+    if row['price'] == lp_df.iloc[-1]['price']:
         lp_status = 'unused'
 
 num_orders_open = len(open_orders)
@@ -222,7 +222,7 @@ if num_orders_open < 1 and num_position_open < 1 and hp_status == 'unused':
             bitget.place_limit_order(pair, 'buy', long_quantity, zigzag_price, reduce=False)
             hp_status = 'used'
     else:
-        print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+        print(f"Zigzag High price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
     
     #Ouvrir le TS et SL
 if position["side"] == "long"
@@ -256,7 +256,7 @@ if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
                 bitget.place_limit_order(pair, 'sell', short_quantity, zigzag_price, reduce=False)
                 lp_status = 'used'
         else:
-            print(f"Zigzag {HL_direction} price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
+            print(f"Zigzag Low price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
         
 if position["side"] == "short"
     if num_TS_orders_open < 1 and num_position_open == 1:
