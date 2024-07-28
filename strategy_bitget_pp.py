@@ -202,6 +202,7 @@ else:
 
 if len(positions_data) == 0:
     df['side'] = None
+    side = 'close'
 else :
     position_info = positions_data[0]
     side = position_info['side']
