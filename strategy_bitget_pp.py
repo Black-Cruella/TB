@@ -225,7 +225,7 @@ if num_orders_open < 1 and num_position_open < 1 and hp_status == 'unused':
         print(f"Zigzag High price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
     
     #Ouvrir le TS et SL
-if position["side"] == "long":
+if side == "long":
     if num_TS_orders_open < 1 and num_position_open == 1:
         long_quantity_in_usd = usd_balance * leverage
         long_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, long_quantity_in_usd / entry_price))))
@@ -258,7 +258,7 @@ if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
         else:
             print(f"Zigzag Low price {zigzag_price}$ is not within the range of RT_df high {RT_high}$ and low {RT_low}$.")
         
-if position["side"] == "short":
+if side == "short":
     if num_TS_orders_open < 1 and num_position_open == 1:
         short_quantity_in_usd = usd_balance * leverage
         short_quantity = float(bitget.convert_amount_to_precision(pair, float(bitget.convert_amount_to_precision(pair, short_quantity_in_usd / entry_price))))
