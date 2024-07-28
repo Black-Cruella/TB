@@ -209,7 +209,7 @@ else :
 
 
 if num_orders_open < 1 and num_position_open < 1 and hp_status == 'unused':
-    zigzag_price = hp_df.iloc[-1]['high']
+    zigzag_price = hp_df.iloc[-1]['price']
     RT_high = RT_df.iloc[-2]['high']
     RT_low = RT_df.iloc[-2]['low']
     
@@ -243,7 +243,7 @@ if position["side"] == "long":
 
 
 if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
-        zigzag_price = lp_df.iloc[-1]['high']
+        zigzag_price = lp_df.iloc[-1]['price']
         RT_high = RT_df.iloc[-2]['high']
         RT_low = RT_df.iloc[-2]['low']
         
