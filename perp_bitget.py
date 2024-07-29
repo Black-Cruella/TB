@@ -177,6 +177,27 @@ class PerpBitget():
         except BaseException as err:
             raise Exception(err)
 
+        @authentication_required
+    def place_trigger_order(self, symbol, side, amount, TriggerPrice):
+        
+        try:
+            return self._session.privateMixPostV2MixOrderPlacePlanOrder(
+                params={
+                    'marginCoin': 'USDT',
+                    'productType': 'usdt-futures',
+                    'marginMode' : 'isolated',
+                    'orderType' : 'limit',
+                    'symbol': symbol,
+                    'size': self.convert_amount_to_precision(symbol, amount),
+                    'planType': 'normal_plan',
+                    'triggerPrice': TriggerPrice,
+                    'triggerType': 'mark_price',
+                    'side': side,
+                }
+            )
+        except BaseException as err:
+            raise Exception(err)
+
     def get_TS_open_order(self, symbol):
         
         try:
