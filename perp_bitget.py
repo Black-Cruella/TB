@@ -177,7 +177,7 @@ class PerpBitget():
         except BaseException as err:
             raise Exception(err)
 
-        @authentication_required
+    @authentication_required
     def place_trigger_order(self, symbol, side, amount, TriggerPrice):
         
         try:
