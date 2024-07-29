@@ -24,7 +24,7 @@ f.close()
 account_to_select = "bitget_exemple"
 production = True
 
-pair = "AVAX/USDT:USDT"
+pair = "BTC/USDT:USDT"
 timeframe = "30m"
 leverage = 0.99
 
@@ -189,7 +189,7 @@ num_position_open = len(position)
 #Annuler les Trailings
 if num_position_open < 1:
     for ts_order_id in TS_order_Id:
-        bitget.cancel_TS_open_order('AVAXUSDT', ts_order_id)
+        bitget.cancel_TS_open_order('BTCUSDT', ts_order_id)
         print(f"Trailing stop order {ts_order_id} canceled due to main position closure.")
 
 # Ajouter le Open Price
@@ -235,15 +235,15 @@ if side == "long":
         rounded_price = round(trailing_stop_price, 3)
         trailingPercent = 0.1  # 1% de suivi
         print(f"Place Short Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
-        bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
+        bitget.place_trailing_stop('BTCUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
         trigger_price = entry_price * 1.0003
         trigger_rounded_price = round(trigger_price, 3)
-        bitget.place_trigger_order('AVAXUSDT', 'sell', long_quantity, trigger_rounded_price, trigger_rounded_price)
+        bitget.place_trigger_order('BTCUSDT', 'sell', long_quantity, trigger_rounded_price, trigger_rounded_price)
         
         stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
         SL_rounded_price = round(stop_loss_price, 3)
         print(f"Place Short Stop Loss Order at {SL_rounded_price}$")
-        bitget.place_market_stop_loss('AVAXUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
+        bitget.place_market_stop_loss('BTCUSDT', 'buy', long_quantity, SL_rounded_price, reduce=True)
 
 
 if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
@@ -271,15 +271,15 @@ if side == "short":
         rounded_price = round(trailing_stop_price, 3)
         trailingPercent = 0.1  # 1% de suivi
         print(f"Place long Trailing Stop Order at {rounded_price}$ with range rate {trailingPercent}")
-        bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, trailingPercent)
+        bitget.place_trailing_stop('BTCUSDT', 'buy', short_quantity, rounded_price, trailingPercent)
         trigger_price = entry_price * 0.9996
         trigger_rounded_price = round(trigger_price, 3)
-        bitget.place_trigger_order('AVAXUSDT', 'buy', short_quantity, trigger_rounded_price, trigger_rounded_price)
+        bitget.place_trigger_order('BTCUSDT', 'buy', short_quantity, trigger_rounded_price, trigger_rounded_price)
         
         stop_loss_price = entry_price * 1.002  # 1% au-dessus du prix de vente
         SL_rounded_price = round(stop_loss_price, 3)
         print(f"Place long Stop Loss Order at {SL_rounded_price}$")
-        bitget.place_market_stop_loss('AVAXUSDT', 'sell', short_quantity, SL_rounded_price, reduce=True)
+        bitget.place_market_stop_loss('BTCUSDT', 'sell', short_quantity, SL_rounded_price, reduce=True)
 
 
 
