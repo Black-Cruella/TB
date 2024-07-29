@@ -238,7 +238,7 @@ if side == "long":
         bitget.place_trailing_stop('AVAXUSDT', 'sell', long_quantity, rounded_price, trailingPercent)
         trigger_price = entry_price * 1.0003
         trigger_rounded_price = round(trigger_price, 3)
-        bitget.place_trigger_order('AVAXUSDT', 'sell', long_quantity, trigger_rounded_price)
+        bitget.place_trigger_order('AVAXUSDT', 'sell', long_quantity, trigger_rounded_price, trigger_rounded_price)
         
         stop_loss_price = entry_price * 0.998  # 1% au-dessus du prix de vente
         SL_rounded_price = round(stop_loss_price, 3)
@@ -274,7 +274,7 @@ if side == "short":
         bitget.place_trailing_stop('AVAXUSDT', 'buy', short_quantity, rounded_price, trailingPercent)
         trigger_price = entry_price * 0.9996
         trigger_rounded_price = round(trigger_price, 3)
-        bitget.place_trigger_order('AVAXUSDT', 'buy', short_quantity, trigger_rounded_price)
+        bitget.place_trigger_order('AVAXUSDT', 'buy', short_quantity, trigger_rounded_price, trigger_rounded_price)
         
         stop_loss_price = entry_price * 1.002  # 1% au-dessus du prix de vente
         SL_rounded_price = round(stop_loss_price, 3)
