@@ -178,8 +178,8 @@ class PerpBitget():
             raise Exception(err)
 
     @authentication_required
-    def place_trigger_order(self, symbol, side, amount, TriggerPrice):
-        
+    def place_trigger_order(self, symbol, side, amount,price, trigger_price):
+
         try:
             return self._session.privateMixPostV2MixOrderPlacePlanOrder(
                 params={
@@ -190,7 +190,8 @@ class PerpBitget():
                     'symbol': symbol,
                     'size': self.convert_amount_to_precision(symbol, amount),
                     'planType': 'normal_plan',
-                    'triggerPrice': TriggerPrice,
+                    'price': self.convert_price_to_precision(symbol, price),
+                    'triggerPrice': self.convert_price_to_precision(symbol, trigger_price),
                     'triggerType': 'mark_price',
                     'side': side,
                 }
@@ -198,6 +199,7 @@ class PerpBitget():
         except BaseException as err:
             raise Exception(err)
 
+    @authentication_required
     def get_TS_open_order(self, symbol):
         
         try:
@@ -209,6 +211,34 @@ class PerpBitget():
             )
         except BaseException as err:
             raise Exception(err)
+
+    @authentication_required
+    def cancel_TS_open_order(self, symbol, order_id):
+        try:
+            return self._session.privateMixPostV2MixOrderCancelPlanOrder(
+                params={
+                'id':order_id,
+                'symbol': symbol,
+                'planType': 'track_plan',
+                "productType": "USDT-FUTURES",
+                }
+            )
+        except BaseException as err:
+            raise Exception("An error occured in cancel_all_open_order", err)
+
+    @authentication_required
+    def cancel_Trigger_open_order(self, symbol, order_id):
+        try:
+            return self._session.privateMixPostV2MixOrderCancelPlanOrder(
+                params={
+                'id':order_id,
+                'symbol': symbol,
+                'planType': 'normal_plan',
+                "productType": "USDT-FUTURES",
+                }
+            )
+        except BaseException as err:
+            raise Exception("An error occured in cancel_all_open_order", err)
 
 
 
