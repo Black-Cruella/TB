@@ -211,8 +211,8 @@ else :
 
 if num_orders_open < 1 and num_position_open < 1 and hp_status == 'unused':
     zigzag_price = hp_df.iloc[-1]['price']
-    RT_high = RT_df.iloc[-2]['high']
-    RT_low = RT_df.iloc[-2]['low']
+    RT_high = RT_df.iloc[-2]['high'] + 0.05
+    RT_low = RT_df.iloc[-2]['low'] - 0.05
     
     if RT_low <= zigzag_price <= RT_high:
         long_quantity_in_usd = usd_balance * leverage
@@ -245,8 +245,8 @@ if side == "long":
 
 if num_orders_open < 1 and num_position_open < 1 and lp_status == 'unused':
         zigzag_price = lp_df.iloc[-1]['price']
-        RT_high = RT_df.iloc[-2]['high']
-        RT_low = RT_df.iloc[-2]['low']
+        RT_high = RT_df.iloc[-2]['high'] + 0.05
+        RT_low = RT_df.iloc[-2]['low'] - 0.05
         
         if RT_low <= zigzag_price <= RT_high:
             short_quantity_in_usd = usd_balance * leverage
